@@ -1,0 +1,36 @@
+{
+  "name": "agent-live",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "node --env-file=.env --import tsx --watch src/index.ts",
+    "format": "prettier --check src",
+    "lint": "pnpm run lint:code && pnpm run lint:type",
+    "lint:code": "eslint src --max-warnings=0",
+    "lint:type": "tsc --noEmit",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:e2e": "echo \"No e2e tests for agent-live\"",
+    "build": "tsup src/index.ts --format esm --dts --out-dir dist --clean",
+    "release:dev": "gcloud run services replace ../../infra/apps/agent-live/cloudrun.yaml --region=${GOOGLE_CLOUD_REGION:-us-central1}",
+    "release": "gcloud run services replace ../../infra/apps/agent-live/cloudrun.yaml --region=${GOOGLE_CLOUD_REGION:-us-central1}",
+    "clean": "find . -name dist -prune -exec rm -r {} + 2>/dev/null || true",
+    "clean:all": "pnpm run clean"
+  },
+  "dependencies": {
+    "@agent-tutor/shared": "workspace:*",
+    "@google/genai": "1.44.0",
+    "ws": "8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "25.4.0",
+    "@types/ws": "8.18.1",
+    "eslint": "9.39.4",
+    "prettier": "3.8.1",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.0"
+  }
+}
