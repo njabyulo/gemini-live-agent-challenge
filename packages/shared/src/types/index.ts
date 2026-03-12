@@ -10,6 +10,8 @@ export interface ILessonContext {
   objective: string;
   task: string;
   expectedOutcome: string;
+  workspaceFiles: string[];
+  focusFilePath: string;
 }
 
 export interface ITestState {
@@ -33,6 +35,7 @@ export type TBrowserEvent =
   | TBrowserAudioEndEvent
   | TBrowserTextEvent
   | TBrowserImageEvent
+  | TBrowserContextEvent
   | TBrowserInterruptEvent
   | TBrowserStopEvent;
 
@@ -46,7 +49,7 @@ export type TServerEvent =
   | TServerSummaryEvent
   | TServerErrorEvent;
 
-export interface TBrowserStartEvent {
+export interface IBrowserStartEvent {
   type: "start";
   courseId: string;
   lessonId: string;
@@ -54,71 +57,94 @@ export interface TBrowserStartEvent {
   terminalOutput?: string;
 }
 
-export interface TBrowserAudioEvent {
+export interface IBrowserAudioEvent {
   type: "audio";
   data: string;
 }
 
-export interface TBrowserAudioEndEvent {
+export interface IBrowserAudioEndEvent {
   type: "audio_end";
 }
 
-export interface TBrowserTextEvent {
+export interface IBrowserTextEvent {
   type: "text";
   text: string;
 }
 
-export interface TBrowserImageEvent {
+export interface IBrowserImageEvent {
   type: "image";
   data: string;
 }
 
-export interface TBrowserInterruptEvent {
+export interface IBrowserContextEvent {
+  type: "context";
+  testStateId: ITestState["id"];
+  terminalOutput: string;
+}
+
+export interface IBrowserInterruptEvent {
   type: "interrupt";
 }
 
-export interface TBrowserStopEvent {
+export interface IBrowserStopEvent {
   type: "stop";
 }
 
-export interface TServerReadyEvent {
+export interface IServerReadyEvent {
   type: "ready";
 }
 
-export interface TServerStatusEvent {
+export interface IServerStatusEvent {
   type: "status";
   phase: TSessionPhase;
 }
 
-export interface TServerInputTranscriptEvent {
+export interface IServerInputTranscriptEvent {
   type: "input_transcript";
   text: string;
 }
 
-export interface TServerOutputTranscriptEvent {
+export interface IServerOutputTranscriptEvent {
   type: "output_transcript";
   text: string;
 }
 
-export interface TServerAudioOutEvent {
+export interface IServerAudioOutEvent {
   type: "audio_out";
   data: string;
   mimeType: string;
 }
 
-export interface TServerInterruptedEvent {
+export interface IServerInterruptedEvent {
   type: "interrupted";
 }
 
-export interface TServerSummaryEvent {
+export interface IServerSummaryEvent {
   type: "summary";
   text: string;
 }
 
-export interface TServerErrorEvent {
+export interface IServerErrorEvent {
   type: "error";
   message: string;
 }
+
+export type TBrowserStartEvent = IBrowserStartEvent;
+export type TBrowserAudioEvent = IBrowserAudioEvent;
+export type TBrowserAudioEndEvent = IBrowserAudioEndEvent;
+export type TBrowserTextEvent = IBrowserTextEvent;
+export type TBrowserImageEvent = IBrowserImageEvent;
+export type TBrowserContextEvent = IBrowserContextEvent;
+export type TBrowserInterruptEvent = IBrowserInterruptEvent;
+export type TBrowserStopEvent = IBrowserStopEvent;
+export type TServerReadyEvent = IServerReadyEvent;
+export type TServerStatusEvent = IServerStatusEvent;
+export type TServerInputTranscriptEvent = IServerInputTranscriptEvent;
+export type TServerOutputTranscriptEvent = IServerOutputTranscriptEvent;
+export type TServerAudioOutEvent = IServerAudioOutEvent;
+export type TServerInterruptedEvent = IServerInterruptedEvent;
+export type TServerSummaryEvent = IServerSummaryEvent;
+export type TServerErrorEvent = IServerErrorEvent;
 
 export const SBrowserStartEvent = z.object({
   type: z.literal("start"),
@@ -147,6 +173,12 @@ export const SBrowserImageEvent = z.object({
   data: z.string().min(1),
 });
 
+export const SBrowserContextEvent = z.object({
+  type: z.literal("context"),
+  testStateId: z.enum(["state-1", "state-2", "state-3"]),
+  terminalOutput: z.string().min(1),
+});
+
 export const SBrowserInterruptEvent = z.object({
   type: z.literal("interrupt"),
 });
@@ -161,6 +193,7 @@ export const SBrowserEvent = z.discriminatedUnion("type", [
   SBrowserAudioEndEvent,
   SBrowserTextEvent,
   SBrowserImageEvent,
+  SBrowserContextEvent,
   SBrowserInterruptEvent,
   SBrowserStopEvent,
 ]);
