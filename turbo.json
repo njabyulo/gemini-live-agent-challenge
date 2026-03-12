@@ -1,0 +1,54 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "format": {
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["lint:code", "lint:type"],
+      "outputs": []
+    },
+    "lint:code": {
+      "outputs": []
+    },
+    "lint:type": {
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["test:unit", "test:e2e"],
+      "outputs": []
+    },
+    "test:unit": {
+      "outputs": []
+    },
+    "test:e2e": {
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", ".open-next/**"]
+    },
+    "release:dev": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "release": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    },
+    "clean:all": {
+      "cache": false
+    }
+  }
+}

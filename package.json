@@ -1,0 +1,33 @@
+{
+  "name": "agent-tutor",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.31.0",
+  "scripts": {
+    "start": "turbo run start --filter=agent-live --filter=web",
+    "dev": "turbo run dev --filter=agent-live --filter=web",
+    "format": "turbo run format",
+    "lint": "turbo run lint",
+    "lint:code": "turbo run lint:code",
+    "lint:type": "turbo run lint:type",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:e2e": "turbo run test:e2e",
+    "build": "turbo run build",
+    "release:dev": "turbo run release:dev",
+    "release:dev:web": "turbo run release:dev --filter=web",
+    "release:dev:api": "turbo run release:dev --filter=agent-live",
+    "release": "turbo run release",
+    "release:web": "turbo run release --filter=web",
+    "release:api": "turbo run release --filter=agent-live",
+    "clean": "turbo run clean",
+    "clean:all": "turbo run clean:all"
+  },
+  "devDependencies": {
+    "eslint": "9.39.4",
+    "prettier": "3.8.1",
+    "turbo": "2.8.16",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.57.0"
+  }
+}

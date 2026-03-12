@@ -1,0 +1,16 @@
+.env
+.env.local
+.env.*.local
+.turbo
+node_modules
+dist
+coverage
+.wrangler
+.next
+.open-next
+.DS_Store
+.pnpm-store
+.git.next-app-generated
+.node_modules.next-app-generated
+pnpm-lock.next-app-generated.yaml
+pnpm-workspace.next-app-generated.yaml
