@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import type { ITestState, TServerEvent } from "@agent-tutor/shared/types";
 
 import { AgentLiveClient } from "../services/agent-live-client";
 import { useLiveMentorStore } from "../state/use-live-mentor-store";
-import type { ILiveMentorAudioRefs, ILiveMentorViewModel } from "../types";
+import type {
+  ILiveMentorAudioRefs,
+  ILiveMentorViewModel,
+  TTerminalTab,
+} from "../types";
 import {
   bytesToBase64,
   downsampleBuffer,
@@ -15,7 +19,13 @@ import {
 } from "../utils/audio";
 import {
   buildScreenshotFromTestState,
-  CODE_BY_STATE,
+  buildWorkspaceFiles,
+  getSourceCode,
+  getTerminalNoteByState,
+  getTestStateById,
+  LESSON_CARD,
+  resolveTestStateIdFromCode,
+  SOURCE_FILE_PATH,
   STATUS_LABELS,
   TEST_STATES,
 } from "../utils/demo-data";
@@ -30,18 +40,24 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
     stream: null,
   });
 
-  const code = useLiveMentorStore((state) => state.code);
+  const activeFilePath = useLiveMentorStore((state) => state.activeFilePath);
+  const files = useLiveMentorStore((state) => state.files);
   const isCapturingAudio = useLiveMentorStore(
     (state) => state.isCapturingAudio,
   );
   const isSessionLive = useLiveMentorStore((state) => state.isSessionLive);
   const messages = useLiveMentorStore((state) => state.messages);
   const sessionPhase = useLiveMentorStore((state) => state.sessionPhase);
+  const terminalTab = useLiveMentorStore((state) => state.terminalTab);
   const testIndex = useLiveMentorStore((state) => state.testIndex);
   const typedPrompt = useLiveMentorStore((state) => state.typedPrompt);
   const appendMessage = useLiveMentorStore((state) => state.appendMessage);
   const resetStore = useLiveMentorStore((state) => state.reset);
-  const setCode = useLiveMentorStore((state) => state.setCode);
+  const setActiveFilePath = useLiveMentorStore(
+    (state) => state.setActiveFilePath,
+  );
+  const setFileContent = useLiveMentorStore((state) => state.setFileContent);
+  const setFiles = useLiveMentorStore((state) => state.setFiles);
   const setIsCapturingAudio = useLiveMentorStore(
     (state) => state.setIsCapturingAudio,
   );
@@ -49,16 +65,22 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
     (state) => state.setIsSessionLive,
   );
   const setSessionPhase = useLiveMentorStore((state) => state.setSessionPhase);
+  const setTerminalTab = useLiveMentorStore((state) => state.setTerminalTab);
   const setTestIndex = useLiveMentorStore((state) => state.setTestIndex);
   const setTypedPrompt = useLiveMentorStore((state) => state.setTypedPrompt);
 
-  const testState = TEST_STATES[testIndex] ?? TEST_STATES[0];
-
-  const wsUrl = useMemo(
-    () =>
-      process.env.NEXT_PUBLIC_AGENT_LIVE_WS_URL ?? "ws://localhost:8080/live",
-    [],
+  const sourceCode = getSourceCode(files);
+  const computedTestStateId = resolveTestStateIdFromCode(sourceCode);
+  const testState = getTestStateById(
+    TEST_STATES[testIndex]?.id ?? computedTestStateId,
   );
+  const activeFile =
+    files.find((file) => file.path === activeFilePath) ??
+    files.find((file) => file.path === SOURCE_FILE_PATH) ??
+    files[0]!;
+  const terminalNote = getTerminalNoteByState(testState.id);
+  const wsUrl =
+    process.env.NEXT_PUBLIC_AGENT_LIVE_WS_URL ?? "ws://localhost:8080/live";
 
   const stopAudioCapture = useCallback(() => {
     audioRefs.current.processor?.disconnect();
@@ -78,6 +100,16 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
     },
     [stopAudioCapture],
   );
+
+  useEffect(() => {
+    const resolvedStateId = resolveTestStateIdFromCode(sourceCode);
+    const nextIndex = TEST_STATES.findIndex(
+      (state) => state.id === resolvedStateId,
+    );
+    if (nextIndex !== -1 && nextIndex !== testIndex) {
+      setTestIndex(nextIndex);
+    }
+  }, [sourceCode, testIndex, setTestIndex]);
 
   const handleServerEvent = async (event: TServerEvent) => {
     if (event.type === "ready") {
@@ -201,13 +233,13 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
       return;
     }
 
-    const base64 = buildScreenshotFromTestState(testState);
+    const base64 = buildScreenshotFromTestState(testState, sourceCode);
     if (!base64) {
       return;
     }
 
     clientRef.current.send({ type: "image", data: base64 });
-    appendMessage("system", "Screenshot shared with the mentor.");
+    appendMessage("system", "Workspace screenshot shared with the mentor.");
   };
 
   const startAudioCapture = async () => {
@@ -261,13 +293,38 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
     setSessionPhase("thinking");
   };
 
+  const setCode = (code: string) => {
+    setFileContent(activeFile.path, code);
+  };
+
+  const selectFile = (path: string) => {
+    setActiveFilePath(path);
+  };
+
+  const emitContextUpdate = (nextState: ITestState) => {
+    if (!clientRef.current?.isOpen()) {
+      return;
+    }
+
+    clientRef.current.send({
+      type: "context",
+      testStateId: nextState.id,
+      terminalOutput: nextState.terminalOutput,
+    });
+  };
+
   const runTests = () => {
-    const nextIndex = Math.min(testIndex + 1, TEST_STATES.length - 1);
-    const nextState =
-      TEST_STATES[nextIndex] ?? TEST_STATES[TEST_STATES.length - 1];
-    setTestIndex(nextIndex);
-    setCode(CODE_BY_STATE[nextState.id]);
-    appendMessage("system", `Test state updated: ${nextState.label}.`);
+    const nextStateId = resolveTestStateIdFromCode(sourceCode);
+    const nextState = getTestStateById(nextStateId);
+    const nextIndex = TEST_STATES.findIndex(
+      (state) => state.id === nextState.id,
+    );
+
+    setFiles(buildWorkspaceFiles(sourceCode));
+    setTestIndex(nextIndex === -1 ? 0 : nextIndex);
+    setTerminalTab("tests");
+    appendMessage("system", `Tests reran. Current state: ${nextState.label}.`);
+    emitContextUpdate(nextState);
   };
 
   const resetDemo = () => {
@@ -276,12 +333,16 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
   };
 
   return {
-    code,
+    activeFile,
+    files,
     isCapturingAudio,
     isSessionLive,
+    lesson: LESSON_CARD,
     messages,
     sessionPhase,
     statusLabel: STATUS_LABELS[sessionPhase],
+    terminalNote,
+    terminalTab,
     testState: testState as ITestState,
     typedPrompt,
     connectSession,
@@ -289,8 +350,10 @@ export function useLiveMentorDemo(): ILiveMentorViewModel {
     interruptMentor,
     resetDemo,
     runTests,
+    selectFile,
     sendTextPrompt,
     setCode,
+    setTerminalTab: (tab: TTerminalTab) => setTerminalTab(tab),
     setTypedPrompt,
     shareScreenshot,
     startAudioCapture,
