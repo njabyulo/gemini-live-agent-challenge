@@ -53,9 +53,18 @@ Cloudflare auth env when running deploys locally or in CI:
 ## Post-Deploy Checks
 
 1. `https://gemini-live.njabulomajozi.com` renders successfully.
-2. The landing page shows the full mock workspace.
+2. The landing page shows the Monaco-based workspace with:
+   - top lesson objective
+   - left explorer
+   - center editor
+   - bottom terminal panel
+   - right live mentor rail
 3. Frontend can attempt a WebSocket connection to the deployed `apps/agent-live`.
-4. Test-state buttons and transcript UI behave normally in production.
+4. `Run tests` transitions between:
+   - `Hard fail`
+   - `Almost there`
+   - `Ready to submit`
+5. Transcript, screenshot share, and voice controls behave normally in production.
 
 ## Rollback
 

@@ -30,8 +30,8 @@ NEXT_PUBLIC_AGENT_LIVE_WS_URL=ws://127.0.0.1:8080/live
 
 ## What the page should show
 
-1. Mock lesson workspace
-2. Mock editor pane
+1. Monaco-based lesson workspace
+2. Compact file explorer
 3. Deterministic test output
 4. Mentor transcript panel
 5. Voice controls:
@@ -51,15 +51,22 @@ NEXT_PUBLIC_AGENT_LIVE_WS_URL=ws://127.0.0.1:8080/live
 
 1. `/` renders the full demo workspace.
 2. `Talk to mentor` attempts a WebSocket connection to `apps/agent-live`.
-3. `Run tests` advances the deterministic demo states:
+3. `Run tests` evaluates the current `ContinueButton.tsx` content and resolves one of the deterministic demo states:
    - `Hard fail`
    - `Almost there`
-   - `Pass`
+   - `Ready to submit`
 4. Transcript UI updates cleanly when server events arrive.
-5. `Reset demo` returns the page to the initial state.
+5. The workspace should include:
+   - top lesson objective
+   - left explorer
+   - center Monaco editor
+   - bottom terminal panel
+   - right live mentor rail
+6. `Reset demo` returns the page to the initial state.
 
 ## Notes
 
 1. `apps/web` is intentionally a focused demo surface, not the full Garrii product shell.
 2. The workspace is mocked on purpose; the live-agent loop is the judged experience.
 3. Feature code lives under `src/features/live-mentor`.
+4. Monaco is loaded client-side only; do not move the editor into a server-rendered path.
