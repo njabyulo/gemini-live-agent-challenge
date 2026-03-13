@@ -1,4 +1,6 @@
 let sharedAudioContext: AudioContext | null = null;
+let nextPlaybackTime = 0;
+const queuedPlaybackSources = new Set<AudioBufferSourceNode>();
 
 export function downsampleBuffer(
   buffer: Float32Array,
@@ -77,15 +79,32 @@ const getAudioContext = async () => {
   }
 
   sharedAudioContext = new AudioContextCtor({ sampleRate: 24000 });
+  nextPlaybackTime = sharedAudioContext.currentTime;
   return sharedAudioContext;
 };
 
-export async function playAudioChunk(
-  base64: string,
-): Promise<AudioBufferSourceNode | null> {
+export async function stopAudioPlayback(): Promise<void> {
   const audioContext = await getAudioContext();
   if (!audioContext) {
-    return null;
+    return;
+  }
+
+  queuedPlaybackSources.forEach((source) => {
+    try {
+      source.stop();
+    } catch {
+      // noop
+    }
+  });
+
+  queuedPlaybackSources.clear();
+  nextPlaybackTime = audioContext.currentTime;
+}
+
+export async function playAudioChunk(base64: string): Promise<void> {
+  const audioContext = await getAudioContext();
+  if (!audioContext) {
+    return;
   }
 
   const binaryString = atob(base64);
@@ -108,7 +127,12 @@ export async function playAudioChunk(
   const source = audioContext.createBufferSource();
   source.buffer = audioBuffer;
   source.connect(audioContext.destination);
-  source.start();
+  source.onended = () => {
+    queuedPlaybackSources.delete(source);
+  };
 
-  return source;
+  const startTime = Math.max(audioContext.currentTime + 0.015, nextPlaybackTime);
+  source.start(startTime);
+  nextPlaybackTime = startTime + audioBuffer.duration;
+  queuedPlaybackSources.add(source);
 }

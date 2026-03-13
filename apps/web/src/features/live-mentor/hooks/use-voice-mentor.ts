@@ -11,6 +11,7 @@ import {
   downsampleBuffer,
   float32To16BitPCM,
   playAudioChunk,
+  stopAudioPlayback,
 } from "../utils/audio";
 
 export function useVoiceMentor() {
@@ -108,7 +109,7 @@ export function useVoiceMentor() {
     () => () => {
       stopAudioCapture();
       clientRef.current?.close();
-      audioRefs.current.outputSource?.stop();
+      void stopAudioPlayback();
     },
     [stopAudioCapture],
   );
@@ -163,15 +164,13 @@ export function useVoiceMentor() {
       if (suppressAssistantUntilNextTurnRef.current) {
         return;
       }
-      audioRefs.current.outputSource?.stop();
-      audioRefs.current.outputSource = await playAudioChunk(event.data);
+      await playAudioChunk(event.data);
       return;
     }
 
     if (event.type === "interrupted") {
       suppressAssistantUntilNextTurnRef.current = true;
-      audioRefs.current.outputSource?.stop();
-      audioRefs.current.outputSource = null;
+      await stopAudioPlayback();
       appendTranscript("system", "Tutor interrupted. Listening again.");
       setSessionPhase("listening");
       return;
@@ -240,6 +239,7 @@ export function useVoiceMentor() {
     clientRef.current?.send({ type: "stop" });
     clientRef.current?.close();
     stopAudioCapture();
+    void stopAudioPlayback();
     lastSyncedContextRef.current = "";
     setIsSessionLive(false);
     setSessionPhase("idle");
@@ -261,8 +261,7 @@ export function useVoiceMentor() {
   const interruptMentor = () => {
     suppressAssistantUntilNextTurnRef.current = true;
     clientRef.current?.send({ type: "interrupt" });
-    audioRefs.current.outputSource?.stop();
-    audioRefs.current.outputSource = null;
+    void stopAudioPlayback();
     setSessionPhase("listening");
   };
 
