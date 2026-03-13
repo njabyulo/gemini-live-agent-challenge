@@ -5,8 +5,8 @@ import {
 } from "@agent-tutor/shared/consts";
 import type {
   IFunctionCallResult,
+  IRuntimeSnapshot,
   TBrowserStartEvent,
-  TBrowserContextEvent,
   TServerAudioOutEvent,
   TServerErrorEvent,
   TServerInputTranscriptEvent,
@@ -18,35 +18,37 @@ import type { WebSocket } from "ws";
 
 import { LIVE_TUTOR_SYSTEM_INSTRUCTION } from "../lib/tutor-instructions.js";
 import { getLessonContext } from "../tools/getLessonContext.js";
-import { getLatestTestOutput } from "../tools/getLatestTestOutput.js";
+import { getRuntimeSnapshot } from "../tools/getRuntimeSnapshot.js";
 
-type LiveSession = Awaited<ReturnType<GoogleGenAI["live"]["connect"]>>;
+type TLiveSession = Awaited<ReturnType<GoogleGenAI["live"]["connect"]>>;
 
 interface ILiveFunctionCall {
   id?: string;
   name: string;
   args?: {
+    command?: string;
     courseId?: string;
     lessonId?: string;
-    testStateId?: "state-1" | "state-2" | "state-3";
-    terminalOutput?: string;
+    sourceCode?: string;
+    stderr?: string;
+    stdout?: string;
   };
 }
 
 interface ILiveServerMessage {
   serverContent?: {
     inputTranscription?: { text?: string };
-    outputTranscription?: { text?: string };
     interrupted?: boolean;
     modelTurn?: {
       parts?: Array<{
-        text?: string;
         inlineData?: {
           data?: string;
           mimeType?: string;
         };
+        text?: string;
       }>;
     };
+    outputTranscription?: { text?: string };
   };
   toolCall?: {
     functionCalls?: ILiveFunctionCall[];
@@ -71,13 +73,10 @@ export const createLiveTutorSession = async ({
   socket,
   startEvent,
 }: {
-  getCurrentContext: () => Pick<
-    TBrowserContextEvent,
-    "terminalOutput" | "testStateId"
-  > | null;
+  getCurrentContext: () => IRuntimeSnapshot;
   socket: WebSocket;
   startEvent: TBrowserStartEvent;
-}): Promise<LiveSession> => {
+}): Promise<TLiveSession> => {
   sendJson(socket, {
     type: "status",
     phase: "connecting",
@@ -95,7 +94,7 @@ export const createLiveTutorSession = async ({
           functionDeclarations: [
             {
               name: "get_lesson_context",
-              description: "Return the current lesson context.",
+              description: "Return the current Python lesson context.",
               parametersJsonSchema: {
                 type: "object",
                 properties: {
@@ -106,13 +105,16 @@ export const createLiveTutorSession = async ({
               },
             },
             {
-              name: "get_latest_test_output",
-              description: "Return the current failing or passing test state.",
+              name: "get_runtime_snapshot",
+              description:
+                "Return the latest source code and runtime output from the workspace.",
               parametersJsonSchema: {
                 type: "object",
                 properties: {
-                  testStateId: { type: "string" },
-                  terminalOutput: { type: "string" },
+                  command: { type: "string" },
+                  sourceCode: { type: "string" },
+                  stderr: { type: "string" },
+                  stdout: { type: "string" },
                 },
               },
             },
@@ -132,10 +134,19 @@ export const createLiveTutorSession = async ({
         }
 
         if (liveMessage.serverContent?.outputTranscription?.text) {
+          const transcript = liveMessage.serverContent.outputTranscription.text;
+
           sendJson(socket, {
             type: "output_transcript",
-            text: liveMessage.serverContent.outputTranscription.text,
+            text: transcript,
           } satisfies TServerOutputTranscriptEvent);
+
+          if (/ready|submit|works now|looks good/iu.test(transcript)) {
+            sendJson(socket, {
+              type: "summary",
+              text: transcript,
+            } satisfies TServerSummaryEvent);
+          }
         }
 
         if (liveMessage.serverContent?.interrupted) {
@@ -144,63 +155,62 @@ export const createLiveTutorSession = async ({
 
         const parts = liveMessage.serverContent?.modelTurn?.parts ?? [];
         for (const part of parts) {
-          if (part.inlineData?.data) {
-            sendJson(socket, {
-              type: "audio_out",
-              data: part.inlineData.data,
-              mimeType: part.inlineData.mimeType ?? OUTPUT_AUDIO_MIME_TYPE,
-            } satisfies TServerAudioOutEvent);
+          if (!part.inlineData?.data) {
+            continue;
           }
 
-          if (part.text?.toLowerCase().includes("ready")) {
-            sendJson(socket, {
-              type: "summary",
-              text: part.text,
-            } satisfies TServerSummaryEvent);
-          }
+          sendJson(socket, {
+            type: "audio_out",
+            data: part.inlineData.data,
+            mimeType: part.inlineData.mimeType ?? OUTPUT_AUDIO_MIME_TYPE,
+          } satisfies TServerAudioOutEvent);
         }
 
-        if (liveMessage.toolCall?.functionCalls?.length) {
-          const functionResponses = liveMessage.toolCall.functionCalls.map(
-            (functionCall: ILiveFunctionCall) => {
-              const args = functionCall.args ?? {};
-              let result: IFunctionCallResult = {};
+        if (!liveMessage.toolCall?.functionCalls?.length) {
+          return;
+        }
 
-              if (functionCall.name === "get_lesson_context") {
-                result = {
-                  lesson: getLessonContext({
-                    courseId: args.courseId ?? startEvent.courseId,
-                    lessonId: args.lessonId ?? startEvent.lessonId,
-                  }),
-                };
-              }
+        const functionResponses = liveMessage.toolCall.functionCalls.map(
+          (
+            functionCall,
+          ): {
+            id: string;
+            name: string;
+            response: { result: IFunctionCallResult };
+          } => {
+            const args = functionCall.args ?? {};
+            let result: IFunctionCallResult = {};
 
-              if (functionCall.name === "get_latest_test_output") {
-                const currentContext = getCurrentContext();
-                result = {
-                  testState: getLatestTestOutput({
-                    testStateId:
-                      args.testStateId ??
-                      currentContext?.testStateId ??
-                      startEvent.testStateId,
-                    terminalOutput:
-                      args.terminalOutput ??
-                      currentContext?.terminalOutput ??
-                      startEvent.terminalOutput,
-                  }),
-                };
-              }
-
-              return {
-                id: functionCall.id ?? functionCall.name,
-                name: functionCall.name,
-                response: { result },
+            if (functionCall.name === "get_lesson_context") {
+              result = {
+                lesson: getLessonContext({
+                  courseId: args.courseId ?? startEvent.courseId,
+                  lessonId: args.lessonId ?? startEvent.lessonId,
+                }),
               };
-            },
-          );
+            }
 
-          session.sendToolResponse({ functionResponses });
-        }
+            if (functionCall.name === "get_runtime_snapshot") {
+              const currentRuntime = getCurrentContext();
+              result = {
+                runtime: getRuntimeSnapshot({
+                  command: args.command ?? currentRuntime.command,
+                  sourceCode: args.sourceCode ?? currentRuntime.sourceCode,
+                  stderr: args.stderr ?? currentRuntime.stderr,
+                  stdout: args.stdout ?? currentRuntime.stdout,
+                }),
+              };
+            }
+
+            return {
+              id: functionCall.id ?? functionCall.name,
+              name: functionCall.name,
+              response: { result },
+            };
+          },
+        );
+
+        session.sendToolResponse({ functionResponses });
       },
       onerror: (error: unknown) => {
         sendJson(socket, {
@@ -212,27 +222,6 @@ export const createLiveTutorSession = async ({
         } satisfies TServerErrorEvent);
       },
     },
-  });
-
-  session.sendClientContent({
-    turns: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: [
-              "This learner is in a guided coding lesson.",
-              `Course: ${startEvent.courseId}`,
-              `Lesson: ${startEvent.lessonId}`,
-              startEvent.terminalOutput
-                ? `Current test output:\n${startEvent.terminalOutput}`
-                : "No terminal output provided yet.",
-            ].join("\n\n"),
-          },
-        ],
-      },
-    ],
-    turnComplete: false,
   });
 
   sendJson(socket, { type: "ready" });

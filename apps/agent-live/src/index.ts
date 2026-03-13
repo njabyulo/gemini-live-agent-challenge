@@ -3,8 +3,7 @@ import { createServer } from "node:http";
 import { INPUT_AUDIO_MIME_TYPE } from "@agent-tutor/shared/consts";
 import {
   SBrowserEvent,
-  type TBrowserContextEvent,
-  type TBrowserStartEvent,
+  type IRuntimeSnapshot,
   type TServerErrorEvent,
   type TServerStatusEvent,
 } from "@agent-tutor/shared/types";
@@ -25,15 +24,19 @@ const server = createServer((req, res) => {
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
-const wss = new WebSocketServer({ server, path: "/live" });
+const wss = new WebSocketServer({ path: "/live", server });
 
 wss.on("connection", (socket) => {
   let session: Awaited<ReturnType<typeof createLiveTutorSession>> | null = null;
-  let startEvent: TBrowserStartEvent | null = null;
-  let currentContext: Pick<
-    TBrowserContextEvent,
-    "terminalOutput" | "testStateId"
-  > | null = null;
+  let startEvent:
+    | import("@agent-tutor/shared/types").TBrowserStartEvent
+    | null = null;
+  let currentContext: IRuntimeSnapshot = {
+    command: "",
+    sourceCode: "",
+    stderr: "",
+    stdout: "",
+  };
 
   const sendJson = (payload: object): void => {
     if (socket.readyState === socket.OPEN) {
@@ -48,13 +51,15 @@ wss.on("connection", (socket) => {
       if (parsed.type === "start") {
         startEvent = parsed;
         currentContext = {
-          terminalOutput: parsed.terminalOutput ?? "",
-          testStateId: parsed.testStateId ?? "state-1",
+          command: parsed.command,
+          sourceCode: parsed.sourceCode,
+          stderr: parsed.stderr,
+          stdout: parsed.stdout,
         };
         session = await createLiveTutorSession({
+          getCurrentContext: () => currentContext,
           socket,
           startEvent: parsed,
-          getCurrentContext: () => currentContext,
         });
         return;
       }
@@ -91,7 +96,27 @@ wss.on("connection", (socket) => {
       }
 
       if (parsed.type === "text") {
-        session.sendRealtimeInput({ text: parsed.text });
+        const contextualPrompt = [
+          "Learner question:",
+          parsed.text,
+          "",
+          "Current lesson context:",
+          `Lesson: ${startEvent.lessonId}`,
+          `Course: ${startEvent.courseId}`,
+          `Latest command: ${currentContext.command || "No command run yet."}`,
+          "Current /workspace/main.py:",
+          currentContext.sourceCode || "Source code is empty.",
+          currentContext.stdout
+            ? `Latest stdout:\n${currentContext.stdout}`
+            : "Latest stdout is empty.",
+          currentContext.stderr
+            ? `Latest stderr:\n${currentContext.stderr}`
+            : "Latest stderr is empty.",
+          "",
+          "Answer the learner's question using the current lesson and runtime context.",
+        ].join("\n");
+
+        session.sendRealtimeInput({ text: contextualPrompt });
         sendJson({
           type: "status",
           phase: "thinking",
@@ -115,19 +140,14 @@ wss.on("connection", (socket) => {
 
       if (parsed.type === "context") {
         currentContext = {
-          terminalOutput: parsed.terminalOutput,
-          testStateId: parsed.testStateId,
+          command: parsed.command,
+          sourceCode: parsed.sourceCode,
+          stderr: parsed.stderr,
+          stdout: parsed.stdout,
         };
-        session.sendRealtimeInput({
-          text: [
-            "Context update from the workspace:",
-            `Test state: ${parsed.testStateId}`,
-            `Terminal output:\n${parsed.terminalOutput}`,
-          ].join("\n\n"),
-        });
         sendJson({
           type: "status",
-          phase: "thinking",
+          phase: "ready",
         } satisfies TServerStatusEvent);
         return;
       }
@@ -150,7 +170,12 @@ wss.on("connection", (socket) => {
         session.close();
         session = null;
         startEvent = null;
-        currentContext = null;
+        currentContext = {
+          command: "",
+          sourceCode: "",
+          stderr: "",
+          stdout: "",
+        };
         sendJson({
           type: "status",
           phase: "ready",

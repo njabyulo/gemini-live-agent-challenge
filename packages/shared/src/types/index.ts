@@ -10,21 +10,50 @@ export interface ILessonContext {
   objective: string;
   task: string;
   expectedOutcome: string;
-  workspaceFiles: string[];
   focusFilePath: string;
+  workspaceFiles: string[];
+  commandSuggestions: string[];
 }
 
-export interface ITestState {
-  id: "state-1" | "state-2" | "state-3";
-  label: string;
-  summary: string;
-  terminalOutput: string;
-  mentorHint: string;
+export interface IWorkspaceFileRecord {
+  path: string;
+  content: string;
+  isEditable: boolean;
+}
+
+export interface IRuntimeSnapshot {
+  sourceCode: string;
+  command: string;
+  stdout: string;
+  stderr: string;
 }
 
 export interface IFunctionCallResult {
   lesson?: ILessonContext;
-  testState?: ITestState;
+  runtime?: IRuntimeSnapshot;
+}
+
+export interface IWorkspaceBootstrapResponse {
+  sandboxId: string;
+  terminalSessionId: string;
+  lesson: ILessonContext;
+  files: IWorkspaceFileRecord[];
+  snapshot: IRuntimeSnapshot;
+}
+
+export interface ISessionUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+}
+
+export interface ISessionSummary {
+  user: ISessionUser;
+  session: {
+    id: string;
+    expiresAt: string;
+  };
 }
 
 export type TSessionPhase = (typeof TUTOR_SESSION_PHASES)[number];
@@ -49,12 +78,10 @@ export type TServerEvent =
   | TServerSummaryEvent
   | TServerErrorEvent;
 
-export interface IBrowserStartEvent {
+export interface IBrowserStartEvent extends IRuntimeSnapshot {
   type: "start";
   courseId: string;
   lessonId: string;
-  testStateId?: ITestState["id"];
-  terminalOutput?: string;
 }
 
 export interface IBrowserAudioEvent {
@@ -76,10 +103,9 @@ export interface IBrowserImageEvent {
   data: string;
 }
 
-export interface IBrowserContextEvent {
+export interface IBrowserContextEvent extends IRuntimeSnapshot {
   type: "context";
-  testStateId: ITestState["id"];
-  terminalOutput: string;
+  lessonId: string;
 }
 
 export interface IBrowserInterruptEvent {
@@ -146,12 +172,17 @@ export type TServerInterruptedEvent = IServerInterruptedEvent;
 export type TServerSummaryEvent = IServerSummaryEvent;
 export type TServerErrorEvent = IServerErrorEvent;
 
-export const SBrowserStartEvent = z.object({
+export const SRuntimeSnapshot = z.object({
+  sourceCode: z.string(),
+  command: z.string(),
+  stdout: z.string(),
+  stderr: z.string(),
+});
+
+export const SBrowserStartEvent = SRuntimeSnapshot.extend({
   type: z.literal("start"),
   courseId: z.string().min(1),
   lessonId: z.string().min(1),
-  testStateId: z.enum(["state-1", "state-2", "state-3"]).optional(),
-  terminalOutput: z.string().optional(),
 });
 
 export const SBrowserAudioEvent = z.object({
@@ -173,10 +204,9 @@ export const SBrowserImageEvent = z.object({
   data: z.string().min(1),
 });
 
-export const SBrowserContextEvent = z.object({
+export const SBrowserContextEvent = SRuntimeSnapshot.extend({
   type: z.literal("context"),
-  testStateId: z.enum(["state-1", "state-2", "state-3"]),
-  terminalOutput: z.string().min(1),
+  lessonId: z.string().min(1),
 });
 
 export const SBrowserInterruptEvent = z.object({

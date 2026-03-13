@@ -8,18 +8,19 @@ export const getLessonContext = ({
   lessonId: string;
 }): ILessonContext => ({
   courseId,
-  courseTitle: "React Debugging Sprint",
+  courseTitle: "Python Foundations",
   lessonId,
-  lessonTitle: "Fix button interaction",
-  objective: "Repair prop flow and event wiring without leaving the workspace.",
-  task: "Make ContinueButton render the learner-facing label and call the provided callback when clicked.",
+  lessonTitle: "Echo command-line input",
+  objective:
+    "Read one command-line argument and print it back exactly as typed.",
+  task: 'Fix main.py so `python3 main.py "Ada Lovelace"` prints `Ada Lovelace` exactly.',
   expectedOutcome:
-    'The button should display "Continue" and call handleClick exactly once.',
+    "The learner understands sys.argv, argument indexing, and why echo commands should not transform the input.",
   workspaceFiles: [
-    "package.json",
-    "src/components/ContinueButton.tsx",
-    "src/components/ContinueButton.test.tsx",
-    "LESSON.md",
+    "/workspace/main.py",
+    "/workspace/README.md",
+    "/workspace/test_main.py",
   ],
-  focusFilePath: "src/components/ContinueButton.tsx",
+  focusFilePath: "/workspace/main.py",
+  commandSuggestions: ['python3 main.py "Ada Lovelace"', "pytest -q"],
 });
