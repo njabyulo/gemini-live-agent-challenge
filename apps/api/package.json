@@ -1,0 +1,37 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "wrangler dev --config ../../infra/apps/api/wrangler.jsonc",
+    "dev": "wrangler dev --config ../../infra/apps/api/wrangler.jsonc",
+    "format": "prettier --check src package.json tsconfig.json",
+    "lint": "pnpm run lint:code && pnpm run lint:type",
+    "lint:code": "eslint src --max-warnings=0",
+    "lint:type": "tsc --noEmit",
+    "test": "pnpm run test:unit && pnpm run test:e2e",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:e2e": "echo \"No e2e tests for api\"",
+    "build": "wrangler deploy --config ../../infra/apps/api/wrangler.jsonc --dry-run",
+    "release:dev": "wrangler deploy --config ../../infra/apps/api/wrangler.jsonc",
+    "release": "wrangler deploy --config ../../infra/apps/api/wrangler.jsonc",
+    "clean": "find . \\( -name .wrangler -o -name coverage \\) -prune -exec rm -r {} + 2>/dev/null || true",
+    "clean:all": "pnpm run clean"
+  },
+  "dependencies": {
+    "@agent-tutor/shared": "workspace:*",
+    "@cloudflare/sandbox": "0.7.17",
+    "better-auth": "1.5.5",
+    "hono": "4.12.7",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "25.4.0",
+    "eslint": "9.39.4",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.0",
+    "wrangler": "4.72.0"
+  }
+}

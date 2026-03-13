@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../node_modules/wrangler/config-schema.json",
+  "name": "agent-tutor-api",
+  "main": "../../../apps/api/src/index.ts",
+  "compatibility_date": "2026-03-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "agent-tutor-auth",
+      "database_id": "replace-me"
+    }
+  ],
+  "containers": [
+    {
+      "class_name": "Sandbox",
+      "image": "./Dockerfile",
+      "instance_type": "lite",
+      "max_instances": 8
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "Sandbox",
+        "name": "Sandbox"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["Sandbox"]
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "gemini-live.njabulomajozi.com/api/*",
+      "custom_domain": false
+    }
+  ]
+}
