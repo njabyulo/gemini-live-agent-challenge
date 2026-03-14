@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { INPUT_AUDIO_MIME_TYPE } from "@agent-tutor/shared/consts";
 import {
   SBrowserEvent,
+  type ILiveLessonGrounding,
   type IRuntimeSnapshot,
   type TServerErrorEvent,
   type TServerStatusEvent,
@@ -37,6 +38,7 @@ wss.on("connection", (socket) => {
     stderr: "",
     stdout: "",
   };
+  let currentLesson: ILiveLessonGrounding | null = null;
 
   const sendJson = (payload: object): void => {
     if (socket.readyState === socket.OPEN) {
@@ -50,6 +52,7 @@ wss.on("connection", (socket) => {
 
       if (parsed.type === "start") {
         startEvent = parsed;
+        currentLesson = parsed.lesson;
         currentContext = {
           command: parsed.command,
           sourceCode: parsed.sourceCode,
@@ -96,13 +99,42 @@ wss.on("connection", (socket) => {
       }
 
       if (parsed.type === "text") {
+        const lessonContext = currentLesson
+          ? [
+              "Current lesson context:",
+              `Course: ${currentLesson.courseTitle}`,
+              `Section: ${currentLesson.sectionTitle}`,
+              `Lesson: ${currentLesson.lessonTitle}`,
+              `Summary: ${currentLesson.summary}`,
+              `Concept: ${currentLesson.concept}`,
+              `Why it matters: ${currentLesson.whyItMatters}`,
+              `Objective: ${currentLesson.objective}`,
+              `Task: ${currentLesson.task}`,
+              `Checker expects: ${currentLesson.checkerExpects}`,
+              `Common failure: ${currentLesson.commonFailure}`,
+              currentLesson.constraints.length
+                ? `Constraints: ${currentLesson.constraints.join(" | ")}`
+                : "Constraints: none",
+              currentLesson.hints.length
+                ? `Hints: ${currentLesson.hints.join(" | ")}`
+                : "Hints: none",
+              currentLesson.references.length
+                ? `Refreshers: ${currentLesson.references.join(" | ")}`
+                : "Refreshers: none",
+            ].join("\n")
+          : [
+              "Current lesson context:",
+              `Lesson: ${startEvent.lessonId}`,
+              `Course: ${startEvent.courseId}`,
+            ].join("\n");
+
         const contextualPrompt = [
           "Learner question:",
           parsed.text,
           "",
-          "Current lesson context:",
-          `Lesson: ${startEvent.lessonId}`,
-          `Course: ${startEvent.courseId}`,
+          lessonContext,
+          "",
+          "Current runtime context:",
           `Latest command: ${currentContext.command || "No command run yet."}`,
           "Current /workspace/main.py:",
           currentContext.sourceCode || "Source code is empty.",
@@ -113,7 +145,8 @@ wss.on("connection", (socket) => {
             ? `Latest stderr:\n${currentContext.stderr}`
             : "Latest stderr is empty.",
           "",
-          "Answer the learner's question using the current lesson and runtime context.",
+          "Answer the learner's question using the lesson teaching context, the screenshot if available, and the current runtime context.",
+          "If helpful, explain the concept in plain language before giving the next concrete debugging step.",
         ].join("\n");
 
         session.sendRealtimeInput({ text: contextualPrompt });
@@ -139,6 +172,7 @@ wss.on("connection", (socket) => {
       }
 
       if (parsed.type === "context") {
+        currentLesson = parsed.lesson;
         currentContext = {
           command: parsed.command,
           sourceCode: parsed.sourceCode,
@@ -170,6 +204,7 @@ wss.on("connection", (socket) => {
         session.close();
         session = null;
         startEvent = null;
+        currentLesson = null;
         currentContext = {
           command: "",
           sourceCode: "",

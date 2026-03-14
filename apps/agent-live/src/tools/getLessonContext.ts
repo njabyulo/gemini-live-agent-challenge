@@ -1,3 +1,4 @@
+import { DEFAULT_COURSE_ID, getLessonContextById } from "@agent-tutor/shared/consts";
 import type { ILessonContext } from "@agent-tutor/shared/types";
 
 export const getLessonContext = ({
@@ -6,21 +7,15 @@ export const getLessonContext = ({
 }: {
   courseId: string;
   lessonId: string;
-}): ILessonContext => ({
-  courseId,
-  courseTitle: "Python Foundations",
-  lessonId,
-  lessonTitle: "Echo command-line input",
-  objective:
-    "Read one command-line argument and print it back exactly as typed.",
-  task: 'Fix main.py so `python3 main.py "Ada Lovelace"` prints `Ada Lovelace` exactly.',
-  expectedOutcome:
-    "The learner understands sys.argv, argument indexing, and why echo commands should not transform the input.",
-  workspaceFiles: [
-    "/workspace/main.py",
-    "/workspace/README.md",
-    "/workspace/test_main.py",
-  ],
-  focusFilePath: "/workspace/main.py",
-  commandSuggestions: ['python3 main.py "Ada Lovelace"', "pytest -q"],
-});
+}): ILessonContext => {
+  if (courseId !== DEFAULT_COURSE_ID) {
+    throw new Error(`Unknown course: ${courseId}`);
+  }
+
+  const lesson = getLessonContextById(lessonId);
+  if (!lesson) {
+    throw new Error(`Unknown lesson: ${lessonId}`);
+  }
+
+  return lesson;
+};

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ILiveLessonGrounding } from "@agent-tutor/shared/types";
 
 import { AgentLiveClient } from "../services/agent-live-client";
 import { getAgentLiveWebSocketUrl } from "../services/api-client";
@@ -13,6 +14,28 @@ import {
   playAudioChunk,
   stopAudioPlayback,
 } from "../utils/audio";
+
+const buildLessonGrounding = (
+  lesson: NonNullable<ReturnType<typeof useLiveMentorStore.getState>["lesson"]>,
+): ILiveLessonGrounding => ({
+  courseId: lesson.courseId,
+  courseTitle: lesson.courseTitle,
+  sectionId: lesson.sectionId,
+  sectionTitle: lesson.sectionTitle,
+  lessonId: lesson.lessonId,
+  lessonTitle: lesson.lessonTitle,
+  summary: lesson.summary,
+  concept: lesson.concept,
+  whyItMatters: lesson.whyItMatters,
+  objective: lesson.objective,
+  task: lesson.task,
+  checkerExpects: lesson.checkerExpects,
+  commonFailure: lesson.commonFailure,
+  expectedOutcome: lesson.expectedOutcome,
+  constraints: lesson.constraints,
+  hints: lesson.hints,
+  references: lesson.references,
+});
 
 export function useVoiceMentor({
   captureWorkspaceImage,
@@ -116,9 +139,12 @@ export function useVoiceMentor({
       return;
     }
 
+    const lessonGrounding = buildLessonGrounding(lesson);
+
     const fingerprint = JSON.stringify({
       contextVersion,
       lessonId: lesson.lessonId,
+      lesson: lessonGrounding,
       ...runtime,
     });
 
@@ -130,6 +156,7 @@ export function useVoiceMentor({
     clientRef.current.send({
       type: "context",
       lessonId: lesson.lessonId,
+      lesson: lessonGrounding,
       ...runtime,
     });
   }, [contextVersion, lesson, runtime]);
@@ -238,6 +265,8 @@ export function useVoiceMentor({
       return false;
     }
 
+    const lessonGrounding = buildLessonGrounding(lesson);
+
     if (isConnectingRef.current) {
       return true;
     }
@@ -280,6 +309,7 @@ export function useVoiceMentor({
         type: "start",
         courseId: lesson.courseId,
         lessonId: lesson.lessonId,
+        lesson: lessonGrounding,
         ...runtime,
       },
       url: getAgentLiveWebSocketUrl(),
