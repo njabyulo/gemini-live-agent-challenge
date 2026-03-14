@@ -290,12 +290,13 @@ export function useLiveMentorWorkspace() {
     updateLessonSelection: setLessonSelection,
     updateLessonView: setLessonView,
     updateProgramInput: setProgramInput,
-    updateFileContent: (content: string) => {
-      if (!activeFile?.isEditable) {
+    updateFileContent: (path: string, content: string) => {
+      const file = files.find((candidate) => candidate.path === path);
+      if (!file?.isEditable) {
         return;
       }
 
-      setFileContent(activeFile.path, content);
+      setFileContent(path, content);
     },
     loadLesson,
     resetLesson,

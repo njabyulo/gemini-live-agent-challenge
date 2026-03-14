@@ -2,19 +2,17 @@
 
 import Editor, { type Monaco } from "@monaco-editor/react";
 import {
-  BookOpenText,
   FileCode2,
   FlaskConical,
-  FolderTree,
+  BookOpenText,
 } from "lucide-react";
-
-import { Badge } from "~/components/ui/badge";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "~/components/ui/tabs";
+import { cn } from "~/lib/utils";
 
 import type { IWorkspaceFileRecord } from "@agent-tutor/shared/types";
 
@@ -70,46 +68,39 @@ const handleBeforeMount = (monaco: Monaco) => {
 
 export function CodeEditorSurface({
   activeFile,
+  className,
+  embedded = false,
   files,
-  lessonTitle,
   onChange,
   onSelectFile,
-  taskSummary,
 }: {
   activeFile: IWorkspaceFileRecord | null;
+  className?: string;
+  embedded?: boolean;
   files: IWorkspaceFileRecord[];
-  lessonTitle: string;
-  onChange: (value: string) => void;
+  onChange: (path: string, value: string) => void;
   onSelectFile: (path: string) => void;
-  taskSummary: string;
 }) {
-  return (
-    <section className="panel-surface editor-grid flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-[rgba(20,31,24,0.1)]">
-      <div className="flex items-center justify-between gap-3 border-b border-[rgba(20,31,24,0.1)] bg-[#f7fbf7] px-4 py-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="rounded-2xl border border-[#b8d7c4] bg-[#dff1e5] p-2 text-[#2f735f]">
-            <FolderTree className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="workspace-eyebrow">Workspace</p>
-            <p className="truncate text-[1rem] leading-6 font-medium text-[#213126]">
-              {lessonTitle}
-            </p>
-            <p className="truncate text-[0.84rem] leading-5 text-[#5d7165]">
-              {taskSummary}
-            </p>
-          </div>
-        </div>
-      </div>
+  const activePath = activeFile?.path ?? files[0]?.path ?? "/workspace/main.py";
 
+  return (
+    <section
+      className={cn(
+        "editor-grid flex min-h-0 flex-col overflow-hidden",
+        embedded
+          ? "codebase-editor-surface"
+          : "panel-surface rounded-[24px] border border-[rgba(20,31,24,0.1)]",
+        className,
+      )}
+    >
       <Tabs
-        value={activeFile?.path ?? files[0]?.path ?? "/workspace/main.py"}
+        value={activePath}
         onValueChange={onSelectFile}
         className="min-h-0 flex-1 gap-0"
       >
         <TabsList
           variant="line"
-          className="h-auto w-full flex-nowrap justify-start gap-1.5 overflow-x-auto border-b border-[rgba(20,31,24,0.1)] bg-[#f1f6f2] px-3 py-2"
+          className="h-auto w-full flex-nowrap justify-start gap-1.5 overflow-x-auto border-b border-[rgba(20,31,24,0.08)] bg-[#eff4f0] px-3 py-2"
         >
           {files.map((file) => (
             <TabsTrigger
@@ -127,27 +118,16 @@ export function CodeEditorSurface({
           ))}
         </TabsList>
 
-        <div className="flex items-center justify-between gap-3 border-b border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] px-4 py-2.5 text-[0.78rem] text-[#5f7468]">
-          <span className="truncate">
-            {activeFile?.path ?? "/workspace/main.py"}
-          </span>
-          <Badge
-            variant="outline"
-            className="rounded-full border-[rgba(20,31,24,0.12)] bg-[#edf4ef] px-2.5 py-1 text-[11px] text-[#385043]"
-          >
-            {activeFile?.isEditable ? "Editable" : "Reference file"}
-          </Badge>
-        </div>
-
         <TabsContent
-          value={activeFile?.path ?? files[0]?.path ?? "/workspace/main.py"}
+          value={activePath}
           className="min-h-0 flex-1 bg-[#0e131d]"
         >
           <Editor
             beforeMount={handleBeforeMount}
             defaultLanguage="python"
-            language={resolveLanguage(activeFile?.path ?? "/workspace/main.py")}
-            onChange={(value) => onChange(value ?? "")}
+            key={activePath}
+            language={resolveLanguage(activePath)}
+            onChange={(value) => onChange(activePath, value ?? "")}
             options={{
               automaticLayout: true,
               fontFamily: "var(--font-mono)",
@@ -163,7 +143,7 @@ export function CodeEditorSurface({
               smoothScrolling: true,
               tabSize: 4,
             }}
-            path={activeFile?.path}
+            path={activePath}
             theme="agent-tutor-dark"
             value={activeFile?.content ?? ""}
           />
