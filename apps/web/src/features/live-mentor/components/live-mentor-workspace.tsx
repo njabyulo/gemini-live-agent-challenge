@@ -6,7 +6,7 @@ import {
   RefreshCcw,
   UserRound,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -33,6 +33,8 @@ import { signOut } from "~/features/auth/services/auth-client";
 
 import { useLiveMentorWorkspace } from "../hooks/use-live-mentor-workspace";
 import { useVoiceMentor } from "../hooks/use-voice-mentor";
+import { PYTEST_COMMAND } from "../utils/terminal";
+import { captureWorkspaceImage } from "../utils/workspace-capture";
 import { CodeEditorSurface } from "./code-editor-surface";
 import { TerminalSurface } from "./terminal-surface";
 import { VoiceAgentPanel } from "./voice-agent-panel";
@@ -46,10 +48,80 @@ const getInitials = (email: string) =>
     .map((segment) => segment.slice(0, 1).toUpperCase())
     .join("") || "JT";
 
+const buildTutorNote = (workspace: ReturnType<typeof useLiveMentorWorkspace>) => {
+  if (workspace.runtime.command === PYTEST_COMMAND && /passed\b/u.test(workspace.runtime.stdout)) {
+    return "Nice. The fix worked. You preserved the original input exactly, so the next move is to submit with confidence.";
+  }
+
+  if (workspace.runtime.stderr.trim()) {
+    return "The latest command produced an error. Read the output, then ask the tutor what changed between the expected and actual behavior.";
+  }
+
+  if (workspace.runtime.command && workspace.runtime.stdout.trim() !== workspace.programInput.trim()) {
+    return "Check the final print path. The output should echo the learner input exactly, without transforming case or trimming spaces.";
+  }
+
+  return (
+    workspace.lesson?.expectedOutcome ||
+    "Run the program once, inspect the output, then ask the tutor what to change."
+  );
+};
+
+const buildSuggestedPrompts = (
+  workspace: ReturnType<typeof useLiveMentorWorkspace>,
+) => {
+  if (workspace.runtime.command === PYTEST_COMMAND && /passed\b/u.test(workspace.runtime.stdout)) {
+    return ["Why does this fix work?", "What should I remember from this lesson?"];
+  }
+
+  if (workspace.runtime.stderr.trim()) {
+    return ["Explain the failure", "What should I change?"];
+  }
+
+  if (workspace.runtime.command) {
+    return ["Why did that uppercase?", "What line should I check?"];
+  }
+
+  return ["What should I look for first?"];
+};
+
+const buildAmbientCue = (workspace: ReturnType<typeof useLiveMentorWorkspace>) => {
+  if (workspace.runtime.command === PYTEST_COMMAND && /passed\b/u.test(workspace.runtime.stdout)) {
+    return "Green result. Ask the tutor for a quick recap if you want the concept behind the fix.";
+  }
+
+  if (workspace.runtime.stderr.trim()) {
+    return "The tutor noticed a runtime issue. A short hint is ready when you ask.";
+  }
+
+  if (workspace.runtime.command) {
+    return "The tutor is grounded on your last command and output. Ask for one precise next step.";
+  }
+
+  return "Run the program once. The tutor gets sharper after it sees real output.";
+};
+
 export function LiveMentorWorkspace() {
   const router = useRouter();
   const workspace = useLiveMentorWorkspace();
-  const voice = useVoiceMentor();
+  const workspaceRegionRef = useRef<HTMLElement | null>(null);
+  const handleCaptureWorkspaceImage = useCallback(async () => {
+    try {
+      return await captureWorkspaceImage(workspaceRegionRef.current);
+    } catch {
+      return null;
+    }
+  }, []);
+  const voice = useVoiceMentor({
+    captureWorkspaceImage: handleCaptureWorkspaceImage,
+  });
+  const tutorNote = buildTutorNote(workspace);
+  const suggestedPrompts = buildSuggestedPrompts(workspace);
+  const ambientCue = buildAmbientCue(workspace);
+  const shouldExpandTerminal =
+    workspace.isRunningCommand ||
+    workspace.runtime.command === PYTEST_COMMAND ||
+    workspace.runtime.stderr.trim().length > 0;
 
   useEffect(() => {
     if (!workspace.isSessionPending && !workspace.session?.user) {
@@ -159,9 +231,15 @@ export function LiveMentorWorkspace() {
             <h1 className="workspace-heading truncate text-[2.1rem] text-white">
               Python foundations workspace
             </h1>
+            <p className="mt-1 max-w-3xl text-sm text-[#95abca]">
+              {ambientCue}
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
+            <Badge className="hidden rounded-full border border-[#72e7cf]/16 bg-[#0f1d1c] px-4 py-2 text-sm font-medium text-[#c6fff0] shadow-none xl:inline-flex">
+              {voice.isSessionLive ? `Tutor ${voice.sessionPhase}` : "Tutor ready"}
+            </Badge>
             <Tooltip>
               <TooltipTrigger>
                 <Badge className="rounded-full border border-[#ffcb76]/18 bg-[#2c2416] px-3 py-1.5 text-xs font-medium text-[#ffdca6]">
@@ -231,21 +309,33 @@ export function LiveMentorWorkspace() {
         </header>
 
         <div className="grid min-h-[calc(100vh-7rem)] grid-cols-1 gap-4 p-4 xl:grid-cols-[minmax(0,3fr)_minmax(340px,1fr)]">
-          <section className="grid min-h-0 grid-rows-[minmax(0,1fr)_320px] gap-4 xl:min-h-[calc(100vh-9rem)]">
+          <section
+            ref={workspaceRegionRef}
+            className={`grid min-h-0 gap-4 xl:min-h-[calc(100vh-9rem)] ${
+              shouldExpandTerminal
+                ? "grid-rows-[minmax(0,1fr)_220px]"
+                : "grid-rows-[minmax(0,1fr)_168px]"
+            }`}
+          >
             <CodeEditorSurface
               activeFile={workspace.activeFile}
               files={workspace.files}
+              lesson={workspace.lesson}
               onChange={workspace.updateFileContent}
               onSelectFile={workspace.updateActiveFile}
+              tutorNote={tutorNote}
             />
 
             <TerminalSurface
+              ambientCue={ambientCue}
               isRunningCommand={workspace.isRunningCommand}
+              lesson={workspace.lesson}
               onProgramInputChange={workspace.updateProgramInput}
               onReset={workspace.resetLesson}
               onRunProgram={workspace.runProgram}
               onRunTests={workspace.runTests}
               programInput={workspace.programInput}
+              runtime={workspace.runtime}
               terminalBuffer={workspace.terminalBuffer}
             />
           </section>
@@ -255,8 +345,12 @@ export function LiveMentorWorkspace() {
               inputLevel={voice.inputLevel}
               isCapturingAudio={voice.isCapturingAudio}
               isSessionLive={voice.isSessionLive}
-              onConnect={voice.connectSession}
+              onConnect={voice.connectVoiceSession}
               onDisconnect={voice.disconnectSession}
+              onSuggestedPrompt={voice.sendSuggestedPrompt}
+              sessionPhase={voice.sessionPhase}
+              suggestedPrompts={suggestedPrompts}
+              tutorNote={tutorNote}
               transcripts={voice.transcripts}
             />
           </div>

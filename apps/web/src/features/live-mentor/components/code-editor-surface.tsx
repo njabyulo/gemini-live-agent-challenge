@@ -3,9 +3,11 @@
 import Editor, { type Monaco } from "@monaco-editor/react";
 import {
   BookOpenText,
+  Bot,
   FileCode2,
   FlaskConical,
   FolderTree,
+  Sparkles,
 } from "lucide-react";
 
 import { Badge } from "~/components/ui/badge";
@@ -16,7 +18,10 @@ import {
   TabsTrigger,
 } from "~/components/ui/tabs";
 
-import type { IWorkspaceFileRecord } from "@agent-tutor/shared/types";
+import type {
+  ILessonContext,
+  IWorkspaceFileRecord,
+} from "@agent-tutor/shared/types";
 
 const resolveLanguage = (path: string) => {
   if (path.endsWith(".py")) {
@@ -71,13 +76,17 @@ const handleBeforeMount = (monaco: Monaco) => {
 export function CodeEditorSurface({
   activeFile,
   files,
+  lesson,
   onChange,
   onSelectFile,
+  tutorNote,
 }: {
   activeFile: IWorkspaceFileRecord | null;
   files: IWorkspaceFileRecord[];
+  lesson: ILessonContext | null;
   onChange: (value: string) => void;
   onSelectFile: (path: string) => void;
+  tutorNote: string;
 }) {
   return (
     <section className="panel-surface editor-grid flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/8">
@@ -89,9 +98,41 @@ export function CodeEditorSurface({
           <div className="min-w-0">
             <p className="workspace-eyebrow">Workspace</p>
             <p className="truncate text-sm text-[#dde8fa]">
-              Python foundations / echo-input
+              {lesson?.courseTitle ?? "Python foundations"} /{" "}
+              {lesson?.lessonTitle ?? "echo-input"}
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 border-b border-white/8 bg-[#0f1622] px-4 py-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
+        <div className="rounded-[22px] border border-white/8 bg-[#0c131d] px-4 py-3">
+          <div className="flex items-center gap-2 text-[#dce8fb]">
+            <Sparkles className="h-4 w-4 text-[#72e7cf]" />
+            <p className="text-sm font-medium">Lesson brief</p>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-[#dbe7f8]">
+            {lesson?.task ??
+              "Run the program, inspect the output, then fix the bug in main.py."}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge className="rounded-full border border-white/10 bg-[#141b28] px-3 py-1 text-[11px] text-[#d9e6fa] shadow-none">
+              Focus file: {lesson?.focusFilePath?.split("/").at(-1) ?? "main.py"}
+            </Badge>
+            {lesson?.commandSuggestions?.[0] ? (
+              <Badge className="rounded-full border border-[#72e7cf]/16 bg-[#0e1d1d] px-3 py-1 text-[11px] text-[#c5fff1] shadow-none">
+                {lesson.commandSuggestions[0]}
+              </Badge>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="rounded-[22px] border border-[#72e7cf]/16 bg-[#0c1819] px-4 py-3">
+          <div className="flex items-center gap-2 text-[#dffcf6]">
+            <Bot className="h-4 w-4 text-[#72e7cf]" />
+            <p className="text-sm font-medium">Tutor note</p>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-[#d3e7e2]">{tutorNote}</p>
         </div>
       </div>
 

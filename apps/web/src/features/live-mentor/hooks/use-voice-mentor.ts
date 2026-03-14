@@ -14,8 +14,13 @@ import {
   stopAudioPlayback,
 } from "../utils/audio";
 
-export function useVoiceMentor() {
+export function useVoiceMentor({
+  captureWorkspaceImage,
+}: {
+  captureWorkspaceImage?: () => Promise<string | null>;
+} = {}) {
   const clientRef = useRef<AgentLiveClient | null>(null);
+  const isConnectingRef = useRef(false);
   const audioRefs = useRef<ILiveMentorAudioRefs>({
     audioContext: null,
     outputSource: null,
@@ -24,6 +29,8 @@ export function useVoiceMentor() {
     stream: null,
   });
   const lastSyncedContextRef = useRef("");
+  const pendingImageRef = useRef<string | null>(null);
+  const pendingPromptRef = useRef<string | null>(null);
   const suppressAssistantUntilNextTurnRef = useRef(false);
   const isStreamingTurnRef = useRef(false);
   const silenceTimeoutRef = useRef<number | null>(null);
@@ -72,15 +79,37 @@ export function useVoiceMentor() {
     setIsCapturingAudio(false);
   }, [setIsCapturingAudio]);
 
-  const finishActiveAudioTurn = useCallback(() => {
+  const shareWorkspaceImage = useCallback(
+    async (imageData?: string | null) => {
+      const data = imageData ?? (await captureWorkspaceImage?.()) ?? null;
+      if (!data) {
+        return false;
+      }
+
+      if (!clientRef.current?.isOpen()) {
+        pendingImageRef.current = data;
+        return true;
+      }
+
+      clientRef.current.send({
+        type: "image",
+        data,
+      });
+      return true;
+    },
+    [captureWorkspaceImage],
+  );
+
+  const finishActiveAudioTurn = useCallback(async () => {
     if (!clientRef.current?.isOpen() || !isStreamingTurnRef.current) {
       return;
     }
 
     isStreamingTurnRef.current = false;
+    await shareWorkspaceImage();
     clientRef.current.send({ type: "audio_end" });
     setSessionPhase("thinking");
-  }, [setSessionPhase]);
+  }, [setSessionPhase, shareWorkspaceImage]);
 
   const sendContextUpdate = useCallback(() => {
     if (!clientRef.current?.isOpen() || !lesson) {
@@ -124,6 +153,7 @@ export function useVoiceMentor() {
     event: import("@agent-tutor/shared/types").TServerEvent,
   ) => {
     if (event.type === "ready") {
+      isConnectingRef.current = false;
       canStreamAudioRef.current = true;
       suppressAssistantUntilNextTurnRef.current = false;
       lastSyncedContextRef.current = JSON.stringify({
@@ -137,6 +167,22 @@ export function useVoiceMentor() {
         "system",
         "Tutor connected. Ask for a hint whenever the runtime output gets confusing.",
       );
+
+      if (pendingImageRef.current && clientRef.current?.isOpen()) {
+        clientRef.current.send({
+          type: "image",
+          data: pendingImageRef.current,
+        });
+        pendingImageRef.current = null;
+      }
+
+      if (pendingPromptRef.current && clientRef.current?.isOpen()) {
+        const prompt = pendingPromptRef.current;
+        pendingPromptRef.current = null;
+        clientRef.current.send({ type: "text", text: prompt });
+        appendTranscript("user", prompt);
+        setSessionPhase("thinking");
+      }
       return;
     }
 
@@ -189,29 +235,34 @@ export function useVoiceMentor() {
 
   const connectSession = async () => {
     if (!lesson) {
-      return;
+      return false;
     }
 
-    canStreamAudioRef.current = false;
+    if (isConnectingRef.current) {
+      return true;
+    }
+
+    if (clientRef.current?.isOpen()) {
+      return true;
+    }
+
     if (!clientRef.current) {
       clientRef.current = new AgentLiveClient();
     }
 
-    const micReady = await startAudioCapture();
-    if (!micReady) {
-      return;
-    }
-
     setSessionPhase("connecting");
+    isConnectingRef.current = true;
     clientRef.current.connect({
       callbacks: {
         onClose: () => {
           canStreamAudioRef.current = false;
+          isConnectingRef.current = false;
           setIsSessionLive(false);
           setSessionPhase("idle");
           setIsCapturingAudio(false);
         },
         onError: () => {
+          isConnectingRef.current = false;
           setSessionPhase("error");
           appendTranscript(
             "system",
@@ -233,6 +284,25 @@ export function useVoiceMentor() {
       },
       url: getAgentLiveWebSocketUrl(),
     });
+
+    return true;
+  };
+
+  const connectVoiceSession = async () => {
+    if (!lesson) {
+      return;
+    }
+
+    if (!clientRef.current) {
+      clientRef.current = new AgentLiveClient();
+    }
+
+    const micReady = await startAudioCapture();
+    if (!micReady) {
+      return;
+    }
+
+    await connectSession();
   };
 
   const disconnectSession = () => {
@@ -240,22 +310,53 @@ export function useVoiceMentor() {
     clientRef.current?.close();
     stopAudioCapture();
     void stopAudioPlayback();
+    isConnectingRef.current = false;
     lastSyncedContextRef.current = "";
+    pendingImageRef.current = null;
+    pendingPromptRef.current = null;
     setIsSessionLive(false);
     setSessionPhase("idle");
   };
 
-  const sendTextPrompt = () => {
+  const sendTextPrompt = async () => {
     const trimmed = typedPrompt.trim();
-    if (!trimmed || !clientRef.current?.isOpen()) {
+    if (!trimmed) {
+      return;
+    }
+
+    if (!clientRef.current?.isOpen()) {
+      pendingPromptRef.current = trimmed;
+      await shareWorkspaceImage();
+      setTypedPrompt("");
+      await connectSession();
       return;
     }
 
     suppressAssistantUntilNextTurnRef.current = false;
+    await shareWorkspaceImage();
     clientRef.current.send({ type: "text", text: trimmed });
     appendTranscript("user", trimmed);
     setTypedPrompt("");
     setSessionPhase("thinking");
+  };
+
+  const sendSuggestedPrompt = async (prompt: string) => {
+    const trimmed = prompt.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    if (clientRef.current?.isOpen()) {
+      await shareWorkspaceImage();
+      clientRef.current.send({ type: "text", text: trimmed });
+      appendTranscript("user", trimmed);
+      setSessionPhase("thinking");
+      return;
+    }
+
+    pendingPromptRef.current = trimmed;
+    await shareWorkspaceImage();
+    await connectSession();
   };
 
   const interruptMentor = () => {
@@ -266,8 +367,8 @@ export function useVoiceMentor() {
   };
 
   const startAudioCapture = async () => {
-    if (!clientRef.current || isCapturingAudio) {
-      return isCapturingAudio;
+    if (isCapturingAudio) {
+      return true;
     }
 
     suppressAssistantUntilNextTurnRef.current = false;
@@ -341,7 +442,7 @@ export function useVoiceMentor() {
         });
 
         silenceTimeoutRef.current = window.setTimeout(() => {
-          finishActiveAudioTurn();
+          void finishActiveAudioTurn();
         }, 850);
         return;
       }
@@ -379,6 +480,7 @@ export function useVoiceMentor() {
 
   return {
     connectSession,
+    connectVoiceSession,
     disconnectSession,
     finishAudioCapture,
     interruptMentor,
@@ -386,6 +488,7 @@ export function useVoiceMentor() {
     isSessionLive,
     inputLevel,
     sendTextPrompt,
+    sendSuggestedPrompt,
     sessionPhase,
     shareCurrentContext: syncCurrentContext,
     startAudioCapture,

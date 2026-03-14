@@ -21,6 +21,7 @@ import {
 export function useLiveMentorWorkspace() {
   const queryClient = useQueryClient();
   const lastSavedSourceRef = useRef<string>("");
+  const hasAnnouncedReadinessRef = useRef(false);
 
   const {
     data: session,
@@ -112,6 +113,7 @@ export function useLiveMentorWorkspace() {
     }
 
     lastSavedSourceRef.current = workspaceQuery.data.snapshot.sourceCode;
+    hasAnnouncedReadinessRef.current = false;
     hydrateWorkspace(workspaceQuery.data);
   }, [hydrateWorkspace, workspaceQuery.data]);
 
@@ -180,6 +182,27 @@ export function useLiveMentorWorkspace() {
       "Session lookup failed. Check the API auth setup.",
     );
   }, [appendTranscript, sessionError]);
+
+  useEffect(() => {
+    const passedTests =
+      runtime.command === PYTEST_COMMAND &&
+      /(^|\s)\d+\s+passed\b/u.test(runtime.stdout);
+
+    if (!passedTests) {
+      hasAnnouncedReadinessRef.current = false;
+      return;
+    }
+
+    if (hasAnnouncedReadinessRef.current) {
+      return;
+    }
+
+    hasAnnouncedReadinessRef.current = true;
+    appendTranscript(
+      "system",
+      "Nice. You preserved the original input exactly. You’re ready.",
+    );
+  }, [appendTranscript, runtime.command, runtime.stdout]);
 
   return {
     activeFile,

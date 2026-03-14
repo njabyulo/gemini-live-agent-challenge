@@ -5,10 +5,13 @@ import { Terminal } from "@xterm/xterm";
 import { FlaskConical, RotateCcw, TerminalSquare } from "lucide-react";
 import { useEffect, useRef } from "react";
 
+import type {
+  ILessonContext,
+  IRuntimeSnapshot,
+} from "@agent-tutor/shared/types";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
 import {
   DEFAULT_PROGRAM_INPUT,
@@ -16,20 +19,26 @@ import {
 } from "../utils/terminal";
 
 export function TerminalSurface({
+  ambientCue,
   isRunningCommand,
+  lesson,
   onProgramInputChange,
   onReset,
   onRunProgram,
   onRunTests,
   programInput,
+  runtime,
   terminalBuffer,
 }: {
+  ambientCue: string;
   isRunningCommand: boolean;
+  lesson: ILessonContext | null;
   onProgramInputChange: (value: string) => void;
   onReset: () => void;
   onRunProgram: () => void;
   onRunTests: () => void;
   programInput: string;
+  runtime: IRuntimeSnapshot;
   terminalBuffer: string;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -104,7 +113,7 @@ export function TerminalSurface({
           <div>
             <p className="workspace-eyebrow">Terminal</p>
             <p className="text-sm text-[#dbe6f8]">
-              Learn how Python runs by changing only the argument input.
+              Run the program, inspect the output, then tighten the fix.
             </p>
           </div>
         </div>
@@ -140,52 +149,54 @@ export function TerminalSurface({
 
       <div className="border-b border-white/8 bg-[#0f1622] px-4 py-3">
         <form
-          className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]"
+          className="grid gap-3 xl:grid-cols-[max-content_minmax(0,1fr)_auto]"
           onSubmit={(event) => {
             event.preventDefault();
             onRunProgram();
           }}
         >
-          <div className="flex min-h-[4.75rem] min-w-0 items-center justify-center rounded-[26px] border border-[#7ce7d3]/12 bg-[#b0e6b6] px-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
-            <div>
-              <Badge className="border-[#24462e]/15 bg-[#d7f4da] text-[#2b4a33] shadow-none">
-                Guided command
-              </Badge>
-              <p className="mt-1 font-mono text-[1.15rem] font-semibold tracking-[-0.04em] text-[#17311d] sm:text-[1.35rem]">
-                {PYTHON_COMMAND_PREFIX}
-              </p>
-            </div>
+          <div className="flex min-h-12 items-center rounded-full border border-[#243141] bg-[#0b1018] px-4 font-mono text-[0.95rem] text-[#eff5ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <span className="mr-3 text-[#5f7391]">$</span>
+            <span>{PYTHON_COMMAND_PREFIX}</span>
           </div>
 
-          <div className="flex min-h-[4.75rem] min-w-0 items-center rounded-[26px] border border-[#dbe6f8]/14 bg-[#0b1018] px-5">
-            <div className="min-w-0 flex-1">
-              <Label
-                htmlFor="program-argument"
-                className="workspace-eyebrow text-[#8fa5c7]"
-              >
-                Argument input
-              </Label>
-              <Input
-                id="program-argument"
-                value={programInput}
-                onChange={(event) => onProgramInputChange(event.target.value)}
-                placeholder={DEFAULT_PROGRAM_INPUT}
-                className="mt-1 h-auto border-0 bg-transparent px-0 text-[1.05rem] text-[#e7eefb] placeholder:text-[#5d708f] focus-visible:ring-0"
-              />
-            </div>
+          <div className="flex min-h-12 min-w-0 items-center rounded-full border border-[#243141] bg-[#0b1018] px-4">
+            <Input
+              id="program-argument"
+              value={programInput}
+              onChange={(event) => onProgramInputChange(event.target.value)}
+              placeholder={DEFAULT_PROGRAM_INPUT}
+              className="h-8 border-0 bg-transparent px-0 font-mono text-[0.95rem] text-[#e7eefb] placeholder:text-[#5d708f] focus-visible:ring-0"
+            />
           </div>
 
-          <div className="flex items-stretch">
+          <div className="flex items-stretch justify-end">
             <Button
               type="submit"
-              size="lg"
+              size="sm"
               disabled={isRunningCommand}
-              className="h-full min-h-[4.75rem] w-full rounded-[26px] bg-[#173a39] px-6 text-[#e5fff8] hover:bg-[#1d4846] xl:w-auto"
+              className="h-12 rounded-full bg-[#173a39] px-5 text-[#e5fff8] hover:bg-[#1d4846]"
             >
               {isRunningCommand ? "Running..." : "Run"}
             </Button>
           </div>
         </form>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Badge className="rounded-full border border-[#72e7cf]/16 bg-[#0f1d1c] px-3 py-1 text-[11px] text-[#c6fff0] shadow-none">
+            {ambientCue}
+          </Badge>
+          {lesson?.expectedOutcome ? (
+            <Badge className="rounded-full border border-white/10 bg-[#141b28] px-3 py-1 text-[11px] text-[#d8e4f7] shadow-none">
+              Goal: {lesson.expectedOutcome}
+            </Badge>
+          ) : null}
+          {runtime.command ? (
+            <Badge className="rounded-full border border-[#6fb5ff]/14 bg-[#101927] px-3 py-1 text-[11px] text-[#d9e7ff] shadow-none">
+              Last command: {runtime.command}
+            </Badge>
+          ) : null}
+        </div>
       </div>
 
       <div className="terminal-surface min-h-0 flex-1 bg-[#0c111b] p-3">
