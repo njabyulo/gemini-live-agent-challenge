@@ -2,6 +2,7 @@ import type { TApiContext } from "../../../utils/hono";
 
 import {
   SLessonFileUpdateBody,
+  SLessonLoadBody,
   SLessonRunCommandBody,
   SLessonRuntimeBody,
   SLessonSandboxQuery,
@@ -28,6 +29,16 @@ export const bootstrapLessonWorkspaceHandler = async (c: TApiContext) => {
   }
 
   const workspace = await bootstrapLessonWorkspace(c.env);
+  return c.json(workspace);
+};
+
+export const loadLessonWorkspaceHandler = async (c: TApiContext) => {
+  if (!requireSession(c)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const body = SLessonLoadBody.parse(await c.req.json());
+  const workspace = await bootstrapLessonWorkspace(c.env, body.lessonId);
   return c.json(workspace);
 };
 
@@ -72,7 +83,12 @@ export const resetLessonWorkspaceHandler = async (c: TApiContext) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const workspace = await bootstrapLessonWorkspace(c.env);
+  const body = await c.req.json().catch(() => ({}));
+  const parsed = SLessonLoadBody.partial().parse(body);
+  const workspace = await bootstrapLessonWorkspace(
+    c.env,
+    parsed.lessonId,
+  );
   return c.json(workspace);
 };
 

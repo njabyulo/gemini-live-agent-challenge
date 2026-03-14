@@ -4,6 +4,7 @@ import {
   bootstrapLessonWorkspaceHandler,
   echoLessonRuntimeHandler,
   getLessonMainFileHandler,
+  loadLessonWorkspaceHandler,
   getLessonTerminalHandler,
   resetLessonWorkspaceHandler,
   runLessonCommandHandler,
@@ -18,6 +19,7 @@ export const createLessonWorkspaceRoutes = () => {
     LESSON_WORKSPACE_ROUTES.bootstrap,
     bootstrapLessonWorkspaceHandler,
   );
+  app.post(LESSON_WORKSPACE_ROUTES.load, loadLessonWorkspaceHandler);
   app.get(LESSON_WORKSPACE_ROUTES.file, getLessonMainFileHandler);
   app.put(LESSON_WORKSPACE_ROUTES.file, updateLessonMainFileHandler);
   app.post(LESSON_WORKSPACE_ROUTES.reset, resetLessonWorkspaceHandler);

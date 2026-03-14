@@ -5,14 +5,39 @@ import { TUTOR_SESSION_PHASES } from "../consts/index.js";
 export interface ILessonContext {
   courseId: string;
   courseTitle: string;
+  sectionId: string;
+  sectionTitle: string;
   lessonId: string;
   lessonTitle: string;
+  summary: string;
   objective: string;
   task: string;
   expectedOutcome: string;
+  constraints: string[];
+  hints: string[];
+  references: string[];
+  sampleInput: string;
   focusFilePath: string;
   workspaceFiles: string[];
   commandSuggestions: string[];
+}
+
+export interface ILessonDefinition {
+  lesson: ILessonContext;
+  files: IWorkspaceFileRecord[];
+  practiceLabel: string;
+}
+
+export interface ICourseSection {
+  id: string;
+  title: string;
+  topics: ILessonDefinition[];
+}
+
+export interface ICourseDefinition {
+  id: string;
+  title: string;
+  sections: ICourseSection[];
 }
 
 export interface IWorkspaceFileRecord {

@@ -11,8 +11,15 @@ export const bootstrapLessonWorkspace = () =>
     method: "POST",
   });
 
-export const resetLessonWorkspace = () =>
+export const loadLessonWorkspace = (lessonId: string) =>
+  fetchJson<IWorkspaceBootstrapResponse>("/api/lesson/load", {
+    body: JSON.stringify({ lessonId }),
+    method: "POST",
+  });
+
+export const resetLessonWorkspace = (lessonId?: string) =>
   fetchJson<IWorkspaceBootstrapResponse>("/api/lesson/reset", {
+    body: JSON.stringify(lessonId ? { lessonId } : {}),
     method: "POST",
   });
 

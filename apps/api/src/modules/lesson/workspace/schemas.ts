@@ -6,6 +6,10 @@ export const SLessonFileUpdateBody = z.object({
   content: z.string(),
 });
 
+export const SLessonLoadBody = z.object({
+  lessonId: z.string().min(1),
+});
+
 export const SLessonRunCommandBody = z.object({
   command: z.string().min(1),
   sandboxId: z.string().min(1),

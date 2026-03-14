@@ -1,12 +1,12 @@
 import {
+  DEFAULT_LESSON_ID,
   DEFAULT_TERMINAL_SESSION_ID,
   DEFAULT_WORKSPACE_ROOT,
+  getLessonDefinitionById,
 } from "@agent-tutor/shared/consts";
 import type {
-  ILessonContext,
   IRuntimeSnapshot,
   IWorkspaceBootstrapResponse,
-  IWorkspaceFileRecord,
 } from "@agent-tutor/shared/types";
 import { getSandbox } from "@cloudflare/sandbox";
 
@@ -15,90 +15,20 @@ import type { IApiEnv } from "../../../utils/env";
 export const LESSON_WORKSPACE_ROUTES = {
   bootstrap: "/api/lesson/bootstrap",
   file: "/api/lesson/file/main.py",
+  load: "/api/lesson/load",
   reset: "/api/lesson/reset",
   run: "/api/lesson/run",
   runtime: "/api/lesson/runtime",
   terminal: "/api/lesson/terminal",
 } as const;
 
-export const LESSON_CONTEXT: ILessonContext = {
-  courseId: "python-foundations",
-  courseTitle: "Python Foundations",
-  lessonId: "echo-cli-input",
-  lessonTitle: "Echo command-line input",
-  objective:
-    "Read one CLI argument and print it back exactly as the learner typed it.",
-  task: 'Fix main.py so python3 main.py "Ada Lovelace" prints Ada Lovelace exactly, without changing the casing or dropping spaces.',
-  expectedOutcome:
-    "The learner understands sys.argv, off-by-one argument access, and why not to transform input that should be echoed as-is.",
-  focusFilePath: "/workspace/main.py",
-  workspaceFiles: [
-    "/workspace/main.py",
-    "/workspace/README.md",
-    "/workspace/test_main.py",
-  ],
-  commandSuggestions: [
-    'python3 main.py "Ada Lovelace"',
-    "python3 -m pytest -q",
-  ],
-};
-
-export const STARTER_FILES: IWorkspaceFileRecord[] = [
-  {
-    path: "/workspace/main.py",
-    isEditable: true,
-    content: `import sys
-
-
-def main() -> None:
-    if len(sys.argv) < 2:
-        print("Please provide input")
-        return
-
-    # Bug: the lesson expects the original input, not uppercase text.
-    print(sys.argv[1].upper())
-
-
-if __name__ == "__main__":
-    main()
-`,
-  },
-  {
-    path: "/workspace/README.md",
-    isEditable: false,
-    content: `# Lesson: Echo command-line input
-
-Objective:
-- Read the first user-provided CLI argument.
-- Print it exactly as typed.
-
-Try:
-- python3 main.py "Ada Lovelace"
-- python3 -m pytest -q
-`,
-  },
-  {
-    path: "/workspace/test_main.py",
-    isEditable: false,
-    content: `from subprocess import run
-
-
-def test_echoes_argument_exactly():
-    completed = run(
-        ["python3", "main.py", "Ada Lovelace"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert completed.stdout.strip() == "Ada Lovelace"
-`,
-  },
-];
-
 export const createWorkspaceSnapshot = (
   partial?: Partial<IRuntimeSnapshot>,
 ): IRuntimeSnapshot => ({
-  sourceCode: partial?.sourceCode ?? STARTER_FILES[0]?.content ?? "",
+  sourceCode:
+    partial?.sourceCode ??
+    getLessonDefinitionById(DEFAULT_LESSON_ID)?.files[0]?.content ??
+    "",
   command: partial?.command ?? "",
   stdout: partial?.stdout ?? "",
   stderr: partial?.stderr ?? "",
@@ -106,7 +36,13 @@ export const createWorkspaceSnapshot = (
 
 export const bootstrapLessonWorkspace = async (
   env: IApiEnv,
+  lessonId = DEFAULT_LESSON_ID,
 ): Promise<IWorkspaceBootstrapResponse> => {
+  const lessonDefinition = getLessonDefinitionById(lessonId);
+  if (!lessonDefinition) {
+    throw new Error(`Unknown lesson: ${lessonId}`);
+  }
+
   const sandboxId = `lesson-${crypto.randomUUID().toLowerCase()}`;
   const sandbox = getSandbox(env.Sandbox, sandboxId, {
     sleepAfter: "20m",
@@ -120,16 +56,18 @@ export const bootstrapLessonWorkspace = async (
 
   await session.mkdir(DEFAULT_WORKSPACE_ROOT, { recursive: true });
 
-  for (const file of STARTER_FILES) {
+  for (const file of lessonDefinition.files) {
     await session.writeFile(file.path, file.content);
   }
 
   return {
     sandboxId,
     terminalSessionId: session.id,
-    lesson: LESSON_CONTEXT,
-    files: STARTER_FILES,
-    snapshot: createWorkspaceSnapshot(),
+    lesson: lessonDefinition.lesson,
+    files: lessonDefinition.files,
+    snapshot: createWorkspaceSnapshot({
+      sourceCode: lessonDefinition.files[0]?.content ?? "",
+    }),
   };
 };
 
