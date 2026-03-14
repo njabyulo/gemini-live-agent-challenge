@@ -1,10 +1,15 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8787";
+import { resolveBrowserAddress } from "~/utils/runtime-url";
+
+const API_BASE_URL = resolveBrowserAddress(
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8787",
+);
 
 export const getApiBaseUrl = () => API_BASE_URL.replace(/\/$/, "");
 
 export const getAgentLiveWebSocketUrl = () =>
-  process.env.NEXT_PUBLIC_AGENT_LIVE_WS_URL ?? "ws://localhost:8080/live";
+  resolveBrowserAddress(
+    process.env.NEXT_PUBLIC_AGENT_LIVE_WS_URL ?? "ws://localhost:8080/live",
+  );
 
 export async function fetchJson<TResponse>(
   path: string,

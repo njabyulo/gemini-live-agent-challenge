@@ -5,8 +5,7 @@
   "packageManager": "pnpm@10.31.0",
   "scripts": {
     "start": "turbo run start --filter=api --filter=web",
-    "dev": "turbo run dev --filter=api --filter=web",
-    "dev:agent-live": "turbo run dev --filter=agent-live",
+    "dev": "turbo run dev --filter=api --filter=web --filter=agent-live",
     "format": "turbo run format",
     "lint": "turbo run lint",
     "lint:code": "turbo run lint:code",

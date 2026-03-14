@@ -12,9 +12,8 @@ Run the hackathon stack locally.
 
 ## Local Split
 
-1. `pnpm dev` runs `apps/api` and `apps/web`.
-2. `pnpm dev:agent-live` runs the Gemini Live backend separately.
-3. The coding workspace is intentionally disposable:
+1. `pnpm dev` runs `apps/api`, `apps/web`, and `apps/agent-live`.
+2. The coding workspace is intentionally disposable:
    - a fresh sandbox is created on `/app`
    - reload resets the lesson workspace
 

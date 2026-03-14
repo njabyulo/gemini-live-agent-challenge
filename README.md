@@ -51,12 +51,10 @@ Hackathon-native Python learning workspace built for the Gemini Live Agent Chall
 3. Fill in the required secrets
 4. Run:
    - `pnpm dev`
-   - `pnpm dev:agent-live`
 
 ## Main Scripts
 
 - `pnpm dev`
-- `pnpm dev:agent-live`
 - `pnpm lint`
 - `pnpm test`
 - `pnpm build`

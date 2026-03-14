@@ -7,9 +7,7 @@ Run `apps/web` locally as the judge-facing frontend.
 ## Prerequisites
 
 1. `pnpm install`
-2. `apps/api` running locally
-3. `apps/agent-live` running locally if you want real voice tutoring
-4. `apps/web/.dev.vars.example` copied to `apps/web/.dev.vars`
+2. `apps/web/.dev.vars.example` copied to `apps/web/.dev.vars`
 
 ## Environment Setup
 
@@ -22,7 +20,7 @@ NEXT_PUBLIC_AGENT_LIVE_WS_URL=ws://localhost:8080/live
 
 ## Run
 
-1. Full frontend+api loop: `pnpm dev`
+1. Full local stack: `pnpm dev`
 2. Web only: `pnpm --filter web dev`
 3. App URL: `http://localhost:3000`
 

@@ -35,7 +35,7 @@ GOOGLE_CLOUD_REGION=us-central1
 
 ## Run
 
-1. Live backend only: `pnpm dev:agent-live`
+1. Full stack including the live backend: `pnpm dev`
 2. Direct package command: `pnpm --filter agent-live dev`
 3. Health URL: `http://localhost:8080/health`
 4. WebSocket URL: `ws://localhost:8080/live`
