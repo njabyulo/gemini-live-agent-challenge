@@ -104,15 +104,15 @@ export function TerminalSurface({
   }, [terminalBuffer]);
 
   return (
-    <section className="panel-surface flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/8">
-      <div className="flex items-center justify-between gap-3 border-b border-white/8 bg-[#0d121b] px-4 py-3">
+    <section className="panel-surface flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-[rgba(20,31,24,0.1)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[rgba(20,31,24,0.1)] bg-[#f7fbf7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="rounded-2xl border border-[#6fb5ff]/18 bg-[#132134] p-2 text-[#6fb5ff]">
+          <div className="rounded-2xl border border-[#c4d8cd] bg-[#e5edf0] p-2 text-[#466b7a]">
             <TerminalSquare className="h-4 w-4" />
           </div>
           <div>
             <p className="workspace-eyebrow">Terminal</p>
-            <p className="text-sm text-[#dbe6f8]">
+            <p className="text-sm text-[#233328]">
               Run the program, inspect the output, then tighten the fix.
             </p>
           </div>
@@ -121,7 +121,7 @@ export function TerminalSurface({
         <div className="flex items-center gap-2">
           <Separator
             orientation="vertical"
-            className="hidden h-8 bg-white/8 sm:block"
+            className="hidden h-8 bg-[rgba(20,31,24,0.1)] sm:block"
           />
           <Button
             type="button"
@@ -129,7 +129,7 @@ export function TerminalSurface({
             size="sm"
             onClick={onRunTests}
             disabled={isRunningCommand}
-            className="border-[#86b8ff]/16 bg-[#101927] text-[#d9e7ff] hover:bg-[#142033]"
+            className="border-[#c6d9ce] bg-[#edf4ef] text-[#27463a] hover:bg-[#e3efe7]"
           >
             <FlaskConical className="mr-2 h-4 w-4" />
             Run tests
@@ -139,7 +139,7 @@ export function TerminalSurface({
             variant="outline"
             size="sm"
             onClick={onReset}
-            className="border-white/10 bg-white/5 text-[#dbe6f8] hover:bg-white/8"
+            className="border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] text-[#385043] hover:bg-[#eef4ef]"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset lesson
@@ -147,7 +147,7 @@ export function TerminalSurface({
         </div>
       </div>
 
-      <div className="border-b border-white/8 bg-[#0f1622] px-4 py-3">
+      <div className="border-b border-[rgba(20,31,24,0.1)] bg-[#edf4ef] px-4 py-3">
         <form
           className="grid gap-3 xl:grid-cols-[max-content_minmax(0,1fr)_auto]"
           onSubmit={(event) => {
@@ -155,18 +155,18 @@ export function TerminalSurface({
             onRunProgram();
           }}
         >
-          <div className="flex min-h-12 items-center rounded-full border border-[#243141] bg-[#0b1018] px-4 font-mono text-[0.95rem] text-[#eff5ff] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-            <span className="mr-3 text-[#5f7391]">$</span>
+          <div className="flex min-h-12 items-center rounded-full border border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] px-4 font-mono text-[0.95rem] text-[#1d2a21] shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+            <span className="mr-3 text-[#5f7468]">$</span>
             <span>{PYTHON_COMMAND_PREFIX}</span>
           </div>
 
-          <div className="flex min-h-12 min-w-0 items-center rounded-full border border-[#243141] bg-[#0b1018] px-4">
+          <div className="flex min-h-12 min-w-0 items-center rounded-full border border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] px-4">
             <Input
               id="program-argument"
               value={programInput}
               onChange={(event) => onProgramInputChange(event.target.value)}
               placeholder={DEFAULT_PROGRAM_INPUT}
-              className="h-8 border-0 bg-transparent px-0 font-mono text-[0.95rem] text-[#e7eefb] placeholder:text-[#5d708f] focus-visible:ring-0"
+              className="h-8 border-0 bg-transparent px-0 font-mono text-[0.95rem] text-[#1d2a21] placeholder:text-[#748679] focus-visible:ring-0"
             />
           </div>
 
@@ -175,7 +175,7 @@ export function TerminalSurface({
               type="submit"
               size="sm"
               disabled={isRunningCommand}
-              className="h-12 rounded-full bg-[#173a39] px-5 text-[#e5fff8] hover:bg-[#1d4846]"
+              className="h-12 rounded-full bg-[#2f735f] px-5 text-[#f5fff8] hover:bg-[#336f5d]"
             >
               {isRunningCommand ? "Running..." : "Run"}
             </Button>
@@ -183,16 +183,16 @@ export function TerminalSurface({
         </form>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge className="rounded-full border border-[#72e7cf]/16 bg-[#0f1d1c] px-3 py-1 text-[11px] text-[#c6fff0] shadow-none">
+          <Badge className="rounded-full border border-[#b8d7c4] bg-[#dff1e5] px-3 py-1 text-[11px] text-[#255845] shadow-none">
             {ambientCue}
           </Badge>
           {lesson?.expectedOutcome ? (
-            <Badge className="rounded-full border border-white/10 bg-[#141b28] px-3 py-1 text-[11px] text-[#d8e4f7] shadow-none">
+            <Badge className="rounded-full border border-[rgba(20,31,24,0.12)] bg-[#f8fbf7] px-3 py-1 text-[11px] text-[#3d5447] shadow-none">
               Goal: {lesson.expectedOutcome}
             </Badge>
           ) : null}
           {runtime.command ? (
-            <Badge className="rounded-full border border-[#6fb5ff]/14 bg-[#101927] px-3 py-1 text-[11px] text-[#d9e7ff] shadow-none">
+            <Badge className="rounded-full border border-[#c6d9ce] bg-[#edf4ef] px-3 py-1 text-[11px] text-[#45636e] shadow-none">
               Last command: {runtime.command}
             </Badge>
           ) : null}

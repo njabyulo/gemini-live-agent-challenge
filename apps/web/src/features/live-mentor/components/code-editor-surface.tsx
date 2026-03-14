@@ -89,15 +89,15 @@ export function CodeEditorSurface({
   tutorNote: string;
 }) {
   return (
-    <section className="panel-surface editor-grid flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/8">
-      <div className="flex items-center justify-between gap-3 border-b border-white/8 bg-[#0d121b] px-4 py-3">
+    <section className="panel-surface editor-grid flex min-h-0 flex-col overflow-hidden rounded-[24px] border border-[rgba(20,31,24,0.1)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[rgba(20,31,24,0.1)] bg-[#f7fbf7] px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="rounded-2xl border border-[#72e7cf]/20 bg-[#12202a] p-2 text-[#72e7cf]">
+          <div className="rounded-2xl border border-[#b8d7c4] bg-[#dff1e5] p-2 text-[#2f735f]">
             <FolderTree className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <p className="workspace-eyebrow">Workspace</p>
-            <p className="truncate text-sm text-[#dde8fa]">
+            <p className="truncate text-sm text-[#213126]">
               {lesson?.courseTitle ?? "Python foundations"} /{" "}
               {lesson?.lessonTitle ?? "echo-input"}
             </p>
@@ -105,34 +105,34 @@ export function CodeEditorSurface({
         </div>
       </div>
 
-      <div className="grid gap-3 border-b border-white/8 bg-[#0f1622] px-4 py-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
-        <div className="rounded-[22px] border border-white/8 bg-[#0c131d] px-4 py-3">
-          <div className="flex items-center gap-2 text-[#dce8fb]">
-            <Sparkles className="h-4 w-4 text-[#72e7cf]" />
+      <div className="grid gap-3 border-b border-[rgba(20,31,24,0.1)] bg-[#edf4ef] px-4 py-3 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
+        <div className="rounded-[22px] border border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] px-4 py-3">
+          <div className="flex items-center gap-2 text-[#1f3026]">
+            <Sparkles className="h-4 w-4 text-[#2f735f]" />
             <p className="text-sm font-medium">Lesson brief</p>
           </div>
-          <p className="mt-2 text-sm leading-6 text-[#dbe7f8]">
+          <p className="mt-2 text-sm leading-6 text-[#44554b]">
             {lesson?.task ??
               "Run the program, inspect the output, then fix the bug in main.py."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Badge className="rounded-full border border-white/10 bg-[#141b28] px-3 py-1 text-[11px] text-[#d9e6fa] shadow-none">
+            <Badge className="rounded-full border border-[rgba(20,31,24,0.12)] bg-[#edf4ef] px-3 py-1 text-[11px] text-[#385043] shadow-none">
               Focus file: {lesson?.focusFilePath?.split("/").at(-1) ?? "main.py"}
             </Badge>
             {lesson?.commandSuggestions?.[0] ? (
-              <Badge className="rounded-full border border-[#72e7cf]/16 bg-[#0e1d1d] px-3 py-1 text-[11px] text-[#c5fff1] shadow-none">
+              <Badge className="rounded-full border border-[#b8d7c4] bg-[#dff1e5] px-3 py-1 text-[11px] text-[#265847] shadow-none">
                 {lesson.commandSuggestions[0]}
               </Badge>
             ) : null}
           </div>
         </div>
 
-        <div className="rounded-[22px] border border-[#72e7cf]/16 bg-[#0c1819] px-4 py-3">
-          <div className="flex items-center gap-2 text-[#dffcf6]">
-            <Bot className="h-4 w-4 text-[#72e7cf]" />
+        <div className="rounded-[22px] border border-[#b8d7c4] bg-[#eaf6ed] px-4 py-3">
+          <div className="flex items-center gap-2 text-[#214032]">
+            <Bot className="h-4 w-4 text-[#2f735f]" />
             <p className="text-sm font-medium">Tutor note</p>
           </div>
-          <p className="mt-2 text-sm leading-6 text-[#d3e7e2]">{tutorNote}</p>
+          <p className="mt-2 text-sm leading-6 text-[#446255]">{tutorNote}</p>
         </div>
       </div>
 
@@ -143,13 +143,13 @@ export function CodeEditorSurface({
       >
         <TabsList
           variant="line"
-          className="h-auto w-full flex-wrap justify-start gap-2 border-b border-white/8 bg-[#111723] px-3 py-2"
+          className="h-auto w-full flex-wrap justify-start gap-2 border-b border-[rgba(20,31,24,0.1)] bg-[#f1f6f2] px-3 py-2"
         >
           {files.map((file) => (
             <TabsTrigger
               key={file.path}
               value={file.path}
-              className="rounded-t-2xl border border-transparent px-3 py-2 text-sm text-[#89a1c0] hover:bg-[#141b28] hover:text-[#d9e6fa] data-active:border-white/10 data-active:bg-[#161e2c] data-active:text-[#f2f7ff] data-active:after:hidden"
+              className="rounded-t-2xl border border-transparent px-3 py-2 text-sm text-[#5b6f63] hover:bg-[#e8f0ea] hover:text-[#1e2d22] data-active:border-[rgba(20,31,24,0.08)] data-active:bg-[#0f1619] data-active:text-[#f2f7f4] data-active:after:hidden"
             >
               {getFileIcon(file.path)}
               <span>{file.path.split("/").at(-1)}</span>
@@ -157,13 +157,13 @@ export function CodeEditorSurface({
           ))}
         </TabsList>
 
-        <div className="flex items-center justify-between gap-3 border-b border-white/8 bg-[#0f1520] px-4 py-2.5 text-xs text-[#8ca0bf]">
+        <div className="flex items-center justify-between gap-3 border-b border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] px-4 py-2.5 text-xs text-[#5f7468]">
           <span className="truncate">
             {activeFile?.path ?? "/workspace/main.py"}
           </span>
           <Badge
             variant="outline"
-            className="rounded-full border-white/10 bg-[#141b28] px-2.5 py-1 text-[11px] text-[#d9e6fa]"
+            className="rounded-full border-[rgba(20,31,24,0.12)] bg-[#edf4ef] px-2.5 py-1 text-[11px] text-[#385043]"
           >
             {activeFile?.isEditable ? "Editable" : "Reference file"}
           </Badge>

@@ -128,20 +128,20 @@ export function VoiceAgentPanel({
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="workspace-eyebrow">System tutor</p>
-            <h2 className="mt-1 text-[1.65rem] font-semibold tracking-[-0.045em] text-white">
+            <h2 className="mt-1 text-[1.5rem] leading-[1.08] font-semibold tracking-[-0.04em] text-[#16211b]">
               Gemini live copilot
             </h2>
           </div>
-          <Badge className="rounded-full border border-[#72e7cf]/16 bg-[#0f1d1c] px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] text-[#c6fff0] shadow-none">
+          <Badge className="rounded-full border border-[#b8d7c4] bg-[#dff1e5] px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] text-[#255845] shadow-none">
             {isSessionLive ? sessionPhase : "Tutor ready"}
           </Badge>
         </div>
 
-        <div className="mt-4 rounded-[22px] border border-[#72e7cf]/16 bg-[#0b1718] px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#79decf]">
+        <div className="mt-4 rounded-[22px] border border-[#b8d7c4] bg-[#eaf6ed] px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#2f735f]">
             Tutor note
           </p>
-          <p className="mt-2 text-sm leading-6 text-[#d5e9e4]">{tutorNote}</p>
+          <p className="mt-2 text-sm leading-6 text-[#456255]">{tutorNote}</p>
         </div>
 
         {suggestedPrompts.length ? (
@@ -153,7 +153,7 @@ export function VoiceAgentPanel({
                 variant="outline"
                 size="sm"
                 onClick={() => onSuggestedPrompt(prompt)}
-                className="rounded-full border-white/10 bg-[#111723] text-[#dbe6f8] hover:bg-[#151d2a]"
+                className="rounded-full border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] text-[#32473b] hover:bg-[#edf4ef]"
               >
                 {prompt}
               </Button>

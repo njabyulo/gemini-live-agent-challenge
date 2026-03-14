@@ -131,89 +131,89 @@ export function LiveMentorWorkspace() {
 
   if (workspace.isSessionPending || workspace.isBootstrapping) {
     return (
-      <main className="min-h-screen bg-[#08101a] px-3 py-3 text-[#edf3ff] sm:px-4 sm:py-4">
-        <div className="workspace-shell mx-auto min-h-[calc(100vh-1.5rem)] max-w-[1780px] overflow-hidden rounded-[30px] border border-white/10 p-4">
-          <div className="rounded-[28px] border border-white/8 bg-[#0c111a] p-5">
+      <main className="min-h-screen bg-transparent px-3 py-3 text-[#16211b] sm:px-4 sm:py-4">
+        <div className="workspace-shell mx-auto min-h-[calc(100vh-1.5rem)] max-w-[1780px] overflow-hidden rounded-[30px] border border-[rgba(20,31,24,0.14)] p-4">
+          <div className="rounded-[28px] border border-black/8 bg-[#0b0f0d] p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-3">
-                <Skeleton className="h-3 w-28 bg-white/10" />
-                <Skeleton className="h-10 w-80 bg-white/12" />
+                <Skeleton className="h-3 w-28 bg-white/14" />
+                <Skeleton className="h-10 w-80 bg-white/18" />
               </div>
               <div className="flex items-center gap-3">
-                <Skeleton className="h-8 w-56 rounded-full bg-white/10" />
-                <Skeleton className="h-12 w-44 rounded-full bg-white/10" />
+                <Skeleton className="h-8 w-56 rounded-full bg-white/14" />
+                <Skeleton className="h-12 w-44 rounded-full bg-white/14" />
               </div>
             </div>
           </div>
 
           <div className="mt-4 grid min-h-[calc(100vh-9rem)] grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(340px,1fr)]">
             <section className="grid min-h-0 grid-rows-[minmax(0,1fr)_320px] gap-4">
-              <div className="panel-surface rounded-[24px] border border-white/8 p-4">
+              <div className="panel-surface rounded-[24px] border border-[rgba(20,31,24,0.1)] p-4">
                 <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-2xl bg-white/10" />
+                  <Skeleton className="h-10 w-10 rounded-2xl bg-[#dfe9e1]" />
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-24 bg-white/10" />
-                    <Skeleton className="h-4 w-44 bg-white/12" />
+                    <Skeleton className="h-3 w-24 bg-[#dfe9e1]" />
+                    <Skeleton className="h-4 w-44 bg-[#d4e0d7]" />
                   </div>
                 </div>
-                <Separator className="my-4 bg-white/8" />
+                <Separator className="my-4 bg-[rgba(20,31,24,0.1)]" />
                 <div className="flex gap-2">
-                  <Skeleton className="h-9 w-28 rounded-t-2xl bg-white/10" />
-                  <Skeleton className="h-9 w-28 rounded-t-2xl bg-white/8" />
-                  <Skeleton className="h-9 w-28 rounded-t-2xl bg-white/8" />
+                  <Skeleton className="h-9 w-28 rounded-t-2xl bg-[#dfe9e1]" />
+                  <Skeleton className="h-9 w-28 rounded-t-2xl bg-[#ebf2ec]" />
+                  <Skeleton className="h-9 w-28 rounded-t-2xl bg-[#ebf2ec]" />
                 </div>
-                <Separator className="my-4 bg-white/8" />
+                <Separator className="my-4 bg-[rgba(20,31,24,0.1)]" />
                 <div className="flex items-center justify-between gap-3">
-                  <Skeleton className="h-3 w-44 bg-white/10" />
-                  <Skeleton className="h-7 w-24 rounded-full bg-white/10" />
+                  <Skeleton className="h-3 w-44 bg-[#dfe9e1]" />
+                  <Skeleton className="h-7 w-24 rounded-full bg-[#dfe9e1]" />
                 </div>
                 <Skeleton className="mt-4 h-[calc(100%-9rem)] min-h-[22rem] w-full rounded-[18px] bg-[#0e131d]" />
               </div>
 
-              <div className="panel-surface rounded-[24px] border border-white/8 p-4">
+              <div className="panel-surface rounded-[24px] border border-[rgba(20,31,24,0.1)] p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-2xl bg-white/10" />
+                    <Skeleton className="h-10 w-10 rounded-2xl bg-[#dfe9e1]" />
                     <div className="space-y-2">
-                      <Skeleton className="h-3 w-20 bg-white/10" />
-                      <Skeleton className="h-4 w-56 bg-white/12" />
+                      <Skeleton className="h-3 w-20 bg-[#dfe9e1]" />
+                      <Skeleton className="h-4 w-56 bg-[#d4e0d7]" />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Skeleton className="h-8 w-24 rounded-xl bg-white/10" />
-                    <Skeleton className="h-8 w-24 rounded-xl bg-white/10" />
+                    <Skeleton className="h-8 w-24 rounded-xl bg-[#dfe9e1]" />
+                    <Skeleton className="h-8 w-24 rounded-xl bg-[#dfe9e1]" />
                   </div>
                 </div>
-                <Separator className="my-4 bg-white/8" />
+                <Separator className="my-4 bg-[rgba(20,31,24,0.1)]" />
                 <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]">
-                  <Skeleton className="h-20 rounded-[26px] bg-white/10" />
-                  <Skeleton className="h-20 rounded-[26px] bg-white/8" />
-                  <Skeleton className="h-20 rounded-[26px] bg-white/10" />
+                  <Skeleton className="h-20 rounded-[26px] bg-[#e6eee8]" />
+                  <Skeleton className="h-20 rounded-[26px] bg-[#eef4ef]" />
+                  <Skeleton className="h-20 rounded-[26px] bg-[#dfe9e1]" />
                 </div>
                 <Skeleton className="mt-4 h-36 rounded-[18px] bg-[#0c111b]" />
               </div>
             </section>
 
-            <div className="panel-surface rounded-[24px] border border-white/8 p-5">
+            <div className="panel-surface rounded-[24px] border border-[rgba(20,31,24,0.1)] p-5">
               <div className="space-y-8">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
-                    <Skeleton className="h-5 w-20 bg-white/12" />
+                    <Skeleton className="h-8 w-8 rounded-full bg-[#dfe9e1]" />
+                    <Skeleton className="h-5 w-20 bg-[#d4e0d7]" />
                   </div>
-                  <Skeleton className="h-20 w-4/5 rounded-2xl bg-white/8" />
+                  <Skeleton className="h-20 w-4/5 rounded-2xl bg-[#eef4ef]" />
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-end gap-3">
-                    <Skeleton className="h-5 w-16 bg-white/12" />
-                    <Skeleton className="h-8 w-8 rounded-full bg-white/10" />
+                    <Skeleton className="h-5 w-16 bg-[#d4e0d7]" />
+                    <Skeleton className="h-8 w-8 rounded-full bg-[#dfe9e1]" />
                   </div>
-                  <Skeleton className="ml-auto h-16 w-3/4 rounded-2xl bg-white/8" />
+                  <Skeleton className="ml-auto h-16 w-3/4 rounded-2xl bg-[#eef4ef]" />
                 </div>
               </div>
               <div className="mt-10 flex items-center justify-end gap-3">
-                <Skeleton className="h-[4.75rem] flex-1 rounded-[1.55rem] bg-white/8" />
-                <Skeleton className="h-[5.1rem] w-[5.1rem] rounded-full bg-white/10" />
+                <Skeleton className="h-[4.75rem] flex-1 rounded-[1.55rem] bg-[#0f1619]" />
+                <Skeleton className="h-[5.1rem] w-[5.1rem] rounded-full bg-[#0f1619]" />
               </div>
             </div>
           </div>
@@ -223,26 +223,26 @@ export function LiveMentorWorkspace() {
   }
 
   return (
-    <main className="min-h-screen bg-[#08101a] px-3 py-3 text-[#edf3ff] sm:px-4 sm:py-4">
-      <div className="workspace-shell mx-auto min-h-[calc(100vh-1.5rem)] max-w-[1780px] overflow-hidden rounded-[30px] border border-white/10">
-        <header className="flex items-center justify-between gap-4 border-b border-white/8 bg-[#0c111a] px-5 py-4">
+    <main className="min-h-screen bg-transparent px-3 py-3 text-[#16211b] sm:px-4 sm:py-4">
+      <div className="workspace-shell mx-auto min-h-[calc(100vh-1.5rem)] max-w-[1780px] overflow-hidden rounded-[30px] border border-[rgba(20,31,24,0.14)]">
+        <header className="flex items-center justify-between gap-4 border-b border-black/10 bg-[#0b0f0d] px-5 py-4">
           <div className="min-w-0">
             <p className="workspace-eyebrow">Agent tutor</p>
-            <h1 className="workspace-heading truncate text-[2.1rem] text-white">
+            <h1 className="workspace-heading truncate text-[2.1rem] leading-[1.06] text-white">
               Python foundations workspace
             </h1>
-            <p className="mt-1 max-w-3xl text-sm text-[#95abca]">
+            <p className="mt-1 max-w-3xl text-sm text-[#b2c3b7]">
               {ambientCue}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge className="hidden rounded-full border border-[#72e7cf]/16 bg-[#0f1d1c] px-4 py-2 text-sm font-medium text-[#c6fff0] shadow-none xl:inline-flex">
+            <Badge className="hidden rounded-full border border-[#84d7ae]/18 bg-[#14221d] px-4 py-2 text-sm font-medium text-[#d5fff0] shadow-none xl:inline-flex">
               {voice.isSessionLive ? `Tutor ${voice.sessionPhase}` : "Tutor ready"}
             </Badge>
             <Tooltip>
               <TooltipTrigger>
-                <Badge className="rounded-full border border-[#ffcb76]/18 bg-[#2c2416] px-3 py-1.5 text-xs font-medium text-[#ffdca6]">
+                <Badge className="rounded-full border border-[#d5a443]/22 bg-[#f7ecd1] px-3 py-1.5 text-xs font-medium text-[#78541d]">
                   Reload resets this lesson workspace
                 </Badge>
               </TooltipTrigger>
@@ -255,36 +255,36 @@ export function LiveMentorWorkspace() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-3 rounded-full border border-white/10 bg-[#141b28] px-3 py-2 text-left text-[#eff5ff] transition hover:bg-[#182130]"
+                  className="flex items-center gap-3 rounded-full border border-black/8 bg-[#f8fbf7] px-3 py-2 text-left text-[#16211b] transition hover:bg-[#edf4ef]"
                 >
                   <Avatar
                     size="lg"
-                    className="border border-[#22424a] bg-[#17323a]"
+                    className="border border-[#b8d7c4] bg-[#d9efe1]"
                   >
-                    <AvatarFallback className="bg-[#17323a] text-sm font-semibold text-[#dcfff8]">
+                    <AvatarFallback className="bg-[#d9efe1] text-sm font-semibold text-[#1f4d3e]">
                       {getInitials(workspace.userEmail)}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden text-sm sm:inline">
                     {workspace.userEmail}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-[#9bb0ce]" />
+                  <ChevronDown className="h-4 w-4 text-[#64776c]" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-64 border-white/10 bg-[#0f1520] text-[#eef4ff]"
+                className="w-64 border-black/8 bg-[#f8fbf7] text-[#16211b]"
               >
-                <DropdownMenuLabel className="text-[#9ab1cf]">
+                <DropdownMenuLabel className="text-[#5a6e62]">
                   Judge session
                 </DropdownMenuLabel>
-                <DropdownMenuItem className="gap-2 text-[#eef4ff] focus:bg-[#162131] focus:text-white">
+                <DropdownMenuItem className="gap-2 text-[#16211b] focus:bg-[#edf4ef] focus:text-[#16211b]">
                   <UserRound className="h-4 w-4" />
                   {workspace.userEmail}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuSeparator className="bg-black/8" />
                 <DropdownMenuItem
-                  className="gap-2 text-[#eef4ff] focus:bg-[#162131] focus:text-white"
+                  className="gap-2 text-[#16211b] focus:bg-[#edf4ef] focus:text-[#16211b]"
                   onClick={() => workspace.resetLesson()}
                 >
                   <RefreshCcw className="h-4 w-4" />
