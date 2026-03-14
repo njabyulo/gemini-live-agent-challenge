@@ -41,8 +41,12 @@ const createLessonDefinition = ({
   lessonId,
   lessonTitle,
   summary,
+  concept,
+  whyItMatters,
   objective,
   task,
+  checkerExpects,
+  commonFailure,
   expectedOutcome,
   constraints,
   hints,
@@ -58,8 +62,12 @@ const createLessonDefinition = ({
   lessonId: string;
   lessonTitle: string;
   summary: string;
+  concept: string;
+  whyItMatters: string;
   objective: string;
   task: string;
+  checkerExpects: string;
+  commonFailure: string;
   expectedOutcome: string;
   constraints: string[];
   hints: string[];
@@ -78,8 +86,12 @@ const createLessonDefinition = ({
     lessonId,
     lessonTitle,
     summary,
+    concept,
+    whyItMatters,
     objective,
     task,
+    checkerExpects,
+    commonFailure,
     expectedOutcome,
     constraints,
     hints,
@@ -131,9 +143,16 @@ export const PYTHON_FOUNDATIONS_COURSE: ICourseDefinition = {
           sectionTitle: "Introduction",
           lessonId: "code-snippets",
           lessonTitle: "Code Snippets",
-          summary: "Use a simple print statement to combine text with learner input.",
+          summary: "Inspect a short Python snippet, fix the output format, and rerun the checker.",
+          concept: "Compose output from literal text plus learner input.",
+          whyItMatters:
+            "Small utilities often fail because their output format is almost right but not exact.",
           objective: 'Read one CLI argument and print "Hello, <name>" exactly once.',
           task: 'Fix main.py so python3 main.py "Ada Lovelace" prints Hello, Ada Lovelace.',
+          checkerExpects:
+            'One line of output in the exact format "Hello, Ada Lovelace".',
+          commonFailure:
+            "Concatenating strings without the space after the comma.",
           expectedOutcome:
             "The learner can inspect a short Python snippet and fix string output without losing the learner input.",
           constraints: [
@@ -193,9 +212,16 @@ def test_greets_the_learner_with_spacing():
           sectionTitle: "Introduction",
           lessonId: "variables",
           lessonTitle: "Variables",
-          summary: "Store the learner input in a variable before printing it back out.",
+          summary: "Trace where a value should be stored, then print the variable instead of a placeholder.",
+          concept: "Store user input in a variable and reuse it in the final output.",
+          whyItMatters:
+            "Real programs become fragile when they keep printing placeholders instead of real runtime values.",
           objective: "Use a variable to hold the CLI argument and print it exactly.",
           task: 'Fix main.py so python3 main.py "Grace Hopper" prints Grace Hopper exactly.',
+          checkerExpects:
+            "The script should print the exact CLI argument with no labels or extra text.",
+          commonFailure:
+            "Assigning a literal placeholder string instead of the learner input.",
           expectedOutcome:
             "The learner understands how variables store values and why a literal string is different from user input.",
           constraints: [
@@ -252,9 +278,16 @@ def test_uses_the_cli_argument_variable():
           sectionTitle: "Introduction",
           lessonId: "operators",
           lessonTitle: "Operators",
-          summary: "Use the correct arithmetic operator to transform numeric input.",
+          summary: "Inspect the arithmetic, fix the operator, and verify the numeric result.",
+          concept: "Choose the correct operator for the transformation the task requires.",
+          whyItMatters:
+            "Production bugs often come from using the right data but the wrong operation on it.",
           objective: "Read a number, double it, and print the result.",
           task: 'Fix main.py so python3 main.py "6" prints 12.',
+          checkerExpects:
+            "A single numeric result equal to twice the provided input.",
+          commonFailure:
+            "Adding a constant instead of multiplying the value.",
           expectedOutcome:
             "The learner understands the difference between addition and multiplication when working with numeric input.",
           constraints: [
@@ -310,9 +343,16 @@ def test_doubles_the_number():
           sectionTitle: "Introduction",
           lessonId: "rules-of-precedence",
           lessonTitle: "Rules of Precedence",
-          summary: "Use parentheses to force the intended order of operations.",
+          summary: "Check the expression order, add the right grouping, and verify the calculation.",
+          concept: "Use parentheses to make Python evaluate an expression in the intended order.",
+          whyItMatters:
+            "A formula can look correct and still fail if the language evaluates parts of it in a different order.",
           objective: "Calculate (value + 2) * 3 and print the result.",
           task: 'Fix main.py so python3 main.py "4" prints 18.',
+          checkerExpects:
+            "A single numeric result based on adding first, then multiplying.",
+          commonFailure:
+            "Relying on default operator precedence when the task needs explicit grouping.",
           expectedOutcome:
             "The learner understands that multiplication happens before addition unless parentheses change the order.",
           constraints: [
@@ -368,11 +408,18 @@ def test_uses_parentheses_to_change_order():
           sectionTitle: "Introduction",
           lessonId: "input-and-output",
           lessonTitle: "Input and Output",
-          summary: "Echo learner input exactly as provided on the command line.",
+          summary: "Preserve the original CLI input and return it exactly as the checker expects.",
+          concept: "Read runtime input and print it back without transforming it.",
+          whyItMatters:
+            "Command-line tools frequently need to preserve user input exactly, especially when output is machine-checked.",
           objective:
             "Read one CLI argument and print it back exactly as the learner typed it.",
           task:
             'Fix main.py so python3 main.py "Ada Lovelace" prints Ada Lovelace exactly, without changing the casing or dropping spaces.',
+          checkerExpects:
+            "One line of output that matches the supplied argument exactly, including spaces and casing.",
+          commonFailure:
+            "Transforming the input before printing it, which breaks exact-output checks.",
           expectedOutcome:
             "The learner understands sys.argv, off-by-one argument access, and why not to transform input that should be echoed as-is.",
           constraints: [
@@ -438,9 +485,16 @@ def test_echoes_argument_exactly():
           sectionTitle: "Conditionals",
           lessonId: "logical-expressions",
           lessonTitle: "Logical Expressions",
-          summary: "Compare numeric input using >= and print the correct branch.",
+          summary: "Inspect the condition, fix the boundary check, and confirm the branch result.",
+          concept: "Write a condition that handles the boundary value correctly.",
+          whyItMatters:
+            "Boundary conditions are a common source of bugs in validation, eligibility, and access logic.",
           objective: 'Print "adult" when the age is 18 or more, otherwise print "minor".',
           task: 'Fix main.py so python3 main.py "18" prints adult.',
+          checkerExpects:
+            'The program should print "adult" for 18 and above, otherwise "minor".',
+          commonFailure:
+            "Using a strict comparison that excludes the exact threshold value.",
           expectedOutcome:
             "The learner understands how boundary values affect logical expressions.",
           constraints: [
@@ -500,9 +554,16 @@ def test_includes_the_boundary_value():
           sectionTitle: "Conditionals",
           lessonId: "logical-operations",
           lessonTitle: "Logical Operations",
-          summary: "Use the correct boolean operator to combine conditions.",
+          summary: "Check the boolean logic, fix the operator, and verify that either weekend day passes.",
+          concept: "Use boolean operators to combine multiple valid conditions.",
+          whyItMatters:
+            "Business rules often succeed when any valid case matches, not only when all of them do.",
           objective: 'Print "weekend" for 6 or 7, otherwise print "weekday".',
           task: 'Fix main.py so python3 main.py "7" prints weekend.',
+          checkerExpects:
+            'The result should be "weekend" for 6 or 7 and "weekday" for any other day number.',
+          commonFailure:
+            "Using and where the task requires or, making the condition impossible to satisfy.",
           expectedOutcome:
             "The learner understands the difference between or and and in boolean logic.",
           constraints: [
@@ -562,10 +623,17 @@ def test_uses_or_for_weekend_days():
           sectionTitle: "Conditionals",
           lessonId: "conditional-statements",
           lessonTitle: "Conditional Statements",
-          summary: "Order chained conditions from most specific to most general.",
+          summary: "Reorder the branches so the most specific case matches before the broader one.",
+          concept: "Write an if/elif chain in the order the checker expects it to resolve.",
+          whyItMatters:
+            "Decision trees in production code fail when a broad condition captures cases that should fall into a stricter branch first.",
           objective:
             'Print "Distinction" for scores >= 80, "Pass" for scores >= 50, otherwise "Retry".',
           task: 'Fix main.py so python3 main.py "83" prints Distinction.',
+          checkerExpects:
+            'Print "Distinction", "Pass", or "Retry" based on the correct threshold order.',
+          commonFailure:
+            "Checking the lower threshold first so higher-scoring cases never reach the stricter branch.",
           expectedOutcome:
             "The learner understands how if/elif order affects which branch runs.",
           constraints: [

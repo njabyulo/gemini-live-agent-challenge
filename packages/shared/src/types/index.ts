@@ -10,8 +10,12 @@ export interface ILessonContext {
   lessonId: string;
   lessonTitle: string;
   summary: string;
+  concept: string;
+  whyItMatters: string;
   objective: string;
   task: string;
+  checkerExpects: string;
+  commonFailure: string;
   expectedOutcome: string;
   constraints: string[];
   hints: string[];

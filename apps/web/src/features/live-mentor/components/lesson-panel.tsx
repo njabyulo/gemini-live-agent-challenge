@@ -210,10 +210,19 @@ export function LessonPanel({
                   <div className="mt-4 grid gap-3">
                     <div className="rounded-[18px] border border-[rgba(20,31,24,0.08)] bg-white px-4 py-3">
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#60756a]">
-                        Outcome
+                        Concept
                       </p>
                       <p className="mt-2 text-[0.92rem] leading-6 text-[#304339]">
-                        {selectedLesson.expectedOutcome}
+                        {selectedLesson.concept}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[18px] border border-[rgba(20,31,24,0.08)] bg-white px-4 py-3">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#60756a]">
+                        Why it matters
+                      </p>
+                      <p className="mt-2 text-[0.92rem] leading-6 text-[#304339]">
+                        {selectedLesson.whyItMatters}
                       </p>
                     </div>
 
@@ -228,16 +237,23 @@ export function LessonPanel({
 
                     <div className="rounded-[18px] border border-[rgba(20,31,24,0.08)] bg-white px-4 py-3">
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#60756a]">
-                        Constraints
+                        Checker expects
                       </p>
-                      <ul className="mt-2 space-y-2 text-[0.9rem] leading-6 text-[#40564b]">
-                        {selectedLesson.constraints.map((constraint) => (
-                          <li key={constraint} className="flex gap-2">
-                            <span className="mt-[0.45rem] h-1.5 w-1.5 rounded-full bg-[#7ab89d]" />
-                            <span>{constraint}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      <p className="mt-2 text-[0.92rem] leading-6 text-[#304339]">
+                        {selectedLesson.checkerExpects}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[18px] border border-[rgba(20,31,24,0.08)] bg-white px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-[#2f735f]" />
+                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#60756a]">
+                          Common failure
+                        </p>
+                      </div>
+                      <p className="mt-2 text-[0.92rem] leading-6 text-[#304339]">
+                        {selectedLesson.commonFailure}
+                      </p>
                     </div>
 
                     <div className="rounded-[18px] border border-[#b8d7c4] bg-[#eef8f1] px-4 py-3">
@@ -259,9 +275,9 @@ export function LessonPanel({
 
                     <div className="rounded-[18px] border border-[rgba(20,31,24,0.08)] bg-white px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-[#2f735f]" />
+                        <BookOpenText className="h-4 w-4 text-[#2f735f]" />
                         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#60756a]">
-                          References
+                          Need a refresher?
                         </p>
                       </div>
                       <ul className="mt-2 space-y-2 text-[0.9rem] leading-6 text-[#40564b]">
