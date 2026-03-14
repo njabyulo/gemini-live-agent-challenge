@@ -1,6 +1,5 @@
 "use client";
 
-import { Mic, MicOff } from "lucide-react";
 import { Fragment, useEffect, useRef } from "react";
 
 import type { ILessonContext } from "@agent-tutor/shared/types";
@@ -76,8 +75,6 @@ export function VoiceAgentPanel({
   inputLevel,
   isCapturingAudio,
   isSessionLive,
-  onConnect,
-  onDisconnect,
   onSuggestedPrompt,
   sessionPhase,
   suggestedPrompts,
@@ -88,8 +85,6 @@ export function VoiceAgentPanel({
   inputLevel: number;
   isCapturingAudio: boolean;
   isSessionLive: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
   onSuggestedPrompt: (prompt: string) => void;
   sessionPhase: string;
   suggestedPrompts: string[];
@@ -98,6 +93,8 @@ export function VoiceAgentPanel({
 }) {
   const transcriptAreaRef = useRef<HTMLDivElement | null>(null);
   const isVoiceActive = isCapturingAudio && inputLevel > 0.02;
+  const isTransportActive = isSessionLive || isCapturingAudio;
+  const transportPhaseLabel = isTransportActive ? sessionPhase : "Tutor ready";
 
   useEffect(() => {
     const container =
@@ -115,15 +112,6 @@ export function VoiceAgentPanel({
       container.scrollTop = container.scrollHeight;
     }
   }, [transcripts, isSessionLive]);
-
-  const toggleSession = () => {
-    if (isSessionLive) {
-      onDisconnect();
-      return;
-    }
-
-    onConnect();
-  };
 
   return (
     <section className="voice-rail flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] p-5">
@@ -144,7 +132,7 @@ export function VoiceAgentPanel({
                   </p>
                 </div>
                 <Badge className="rounded-full border border-[#b8d7c4] bg-[#dff1e5] px-3 py-1.5 text-[10.5px] uppercase tracking-[0.18em] text-[#255845] shadow-none">
-                  {isSessionLive ? sessionPhase : "Tutor ready"}
+                  {transportPhaseLabel}
                 </Badge>
               </div>
 
@@ -225,56 +213,33 @@ export function VoiceAgentPanel({
         </ScrollArea>
         <div className="voice-transport-shell pointer-events-none sticky bottom-0 mt-auto pt-5">
           <div className="voice-transport-backdrop pointer-events-none absolute inset-x-0 bottom-0 h-28" />
-          <div
-            className={`voice-transport-layout relative ${
-              isSessionLive ? "voice-transport-layout-active" : ""
-            }`}
-          >
-            <div
-              aria-hidden="true"
-              className={`voice-transport-pill ${
-                isSessionLive ? "voice-transport-pill-active" : ""
-              }`}
-            >
-              <span
-                data-active={isVoiceActive}
-                className="voice-meter voice-transport-meter"
+          {isTransportActive ? (
+            <div className="voice-transport-layout voice-transport-layout-active relative">
+              <div
+                aria-hidden="true"
+                className="voice-transport-pill voice-transport-pill-active"
               >
-                {Array.from({ length: 30 }).map((_, index) => (
-                  <span
-                    key={`voice-bar-${index}`}
-                    className="voice-meter-bar"
-                    style={{
-                      animationDelay: `${index * 0.035}s`,
-                      ["--voice-level" as string]: `${Math.max(
-                        inputLevel,
-                        0.08,
-                      )}`,
-                    }}
-                  />
-                ))}
-              </span>
+                <span
+                  data-active={isVoiceActive}
+                  className="voice-meter voice-transport-meter"
+                >
+                  {Array.from({ length: 30 }).map((_, index) => (
+                    <span
+                      key={`voice-bar-${index}`}
+                      className="voice-meter-bar"
+                      style={{
+                        animationDelay: `${index * 0.035}s`,
+                        ["--voice-level" as string]: `${Math.max(
+                          inputLevel,
+                          0.08,
+                        )}`,
+                      }}
+                    />
+                  ))}
+                </span>
+              </div>
             </div>
-            <button
-              type="button"
-              aria-label={isSessionLive ? "End voice session" : "Start voice session"}
-              onClick={toggleSession}
-              data-active={isSessionLive}
-              className={`voice-transport-button pointer-events-auto ${
-                isSessionLive
-                  ? "voice-transport-button-active"
-                  : "voice-transport-button-idle"
-              }`}
-            >
-              <span className="voice-transport-icon">
-                {isSessionLive ? (
-                  <Mic className="h-4 w-4" />
-                ) : (
-                  <MicOff className="h-5 w-5" />
-                )}
-              </span>
-            </button>
-          </div>
+          ) : null}
         </div>
       </div>
     </section>
