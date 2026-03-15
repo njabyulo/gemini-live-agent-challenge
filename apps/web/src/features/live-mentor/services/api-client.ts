@@ -3,6 +3,7 @@ import {
   getBrowserApiBaseUrl,
   resolveBrowserAddress,
 } from "~/utils/runtime-url";
+import type { ILiveSessionTokenResponse } from "@gemini-live-agent/shared/types";
 
 const API_BASE_URL = resolveBrowserAddress(
   getBrowserApiBaseUrl(),
@@ -12,6 +13,17 @@ export const getApiBaseUrl = () => API_BASE_URL.replace(/\/$/, "");
 
 export const getAgentTutorLiveWebSocketUrl = () =>
   resolveBrowserAddress(getBrowserAgentTutorLiveWebSocketUrl());
+
+export const getAgentTutorLiveAuthorizedWebSocketUrl = (token: string) => {
+  const url = new URL(getAgentTutorLiveWebSocketUrl());
+  url.searchParams.set("token", token);
+  return url.toString();
+};
+
+export const createAgentTutorLiveSessionToken = async () =>
+  await fetchJson<ILiveSessionTokenResponse>("/api/live/token", {
+    method: "POST",
+  });
 
 export async function fetchJson<TResponse>(
   path: string,

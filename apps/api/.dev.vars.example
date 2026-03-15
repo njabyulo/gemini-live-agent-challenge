@@ -1,3 +1,5 @@
+AGENT_TUTOR_LIVE_SHARED_SECRET=replace-me-with-a-shared-live-secret
+AGENT_TUTOR_LIVE_TOKEN_TTL_SECONDS=60
 BETTER_AUTH_SECRET=replace-me-with-a-long-random-secret
 BETTER_AUTH_URL=http://localhost:8787
 BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000

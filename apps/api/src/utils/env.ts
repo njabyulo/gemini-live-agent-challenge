@@ -1,4 +1,6 @@
 export interface IApiEnv extends Env {
+  AGENT_TUTOR_LIVE_SHARED_SECRET?: string;
+  AGENT_TUTOR_LIVE_TOKEN_TTL_SECONDS?: string;
   BETTER_AUTH_ADMIN_TOKEN?: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
@@ -36,4 +38,22 @@ export const getTrustedOrigins = (env: IApiEnv): string[] => {
       ),
     ),
   );
+};
+
+export const getAgentTutorLiveSharedSecret = (env: IApiEnv) => {
+  if (!env.AGENT_TUTOR_LIVE_SHARED_SECRET) {
+    throw new Error("AGENT_TUTOR_LIVE_SHARED_SECRET is not configured.");
+  }
+
+  return env.AGENT_TUTOR_LIVE_SHARED_SECRET;
+};
+
+export const getAgentTutorLiveTokenTtlSeconds = (env: IApiEnv) => {
+  const ttlSeconds = Number(env.AGENT_TUTOR_LIVE_TOKEN_TTL_SECONDS ?? "60");
+
+  if (!Number.isFinite(ttlSeconds) || ttlSeconds <= 0) {
+    throw new Error("AGENT_TUTOR_LIVE_TOKEN_TTL_SECONDS must be positive.");
+  }
+
+  return ttlSeconds;
 };

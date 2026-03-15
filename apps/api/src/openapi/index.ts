@@ -1,5 +1,6 @@
 import { authSessionOpenApi } from "../modules/auth/session/openapi";
 import { lessonWorkspaceOpenApi } from "../modules/lesson/workspace/openapi";
+import { liveSessionTokenOpenApi } from "../modules/live/session-token/openapi";
 import { healthOpenApi } from "../modules/platform/health/openapi";
 import { migrationsOpenApi } from "../modules/platform/migrations/openapi";
 
@@ -14,6 +15,7 @@ export const apiOpenApiDefinition = {
     healthOpenApi,
     migrationsOpenApi,
     ...authSessionOpenApi,
+    ...liveSessionTokenOpenApi,
     ...lessonWorkspaceOpenApi,
   ],
   tooling: {

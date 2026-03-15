@@ -8,6 +8,7 @@ import { createHealthRoutes } from "./modules/platform/health/routes";
 import { createMigrationRoutes } from "./modules/platform/migrations/routes";
 import { createAuthSessionRoutes } from "./modules/auth/session/routes";
 import { createLessonWorkspaceRoutes } from "./modules/lesson/workspace/routes";
+import { createLiveSessionTokenRoutes } from "./modules/live/session-token/routes";
 
 const app = createApiApp();
 
@@ -20,6 +21,7 @@ app.use("/api/*", attachSession);
 app.route("/", createHealthRoutes());
 app.route("/", createMigrationRoutes());
 app.route("/", createAuthSessionRoutes());
+app.route("/", createLiveSessionTokenRoutes());
 app.route("/", createLessonWorkspaceRoutes());
 
 export default app;

@@ -4,7 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ILiveLessonGrounding } from "@gemini-live-agent/shared/types";
 
 import { AgentTutorLiveClient } from "../services/agent-tutor-live-client";
-import { getAgentTutorLiveWebSocketUrl } from "../services/api-client";
+import {
+  createAgentTutorLiveSessionToken,
+  getAgentTutorLiveAuthorizedWebSocketUrl,
+} from "../services/api-client";
 import { useLiveMentorStore } from "../states/use-live-mentor-store";
 import type { ILiveMentorAudioRefs } from "../types";
 import {
@@ -281,6 +284,24 @@ export function useVoiceMentor({
 
     setSessionPhase("connecting");
     isConnectingRef.current = true;
+
+    let liveSessionUrl: string;
+
+    try {
+      const { token } = await createAgentTutorLiveSessionToken();
+      liveSessionUrl = getAgentTutorLiveAuthorizedWebSocketUrl(token);
+    } catch (error) {
+      isConnectingRef.current = false;
+      setSessionPhase("error");
+      appendTranscript(
+        "system",
+        error instanceof Error
+          ? `Could not authorize the live tutor: ${error.message}`
+          : "Could not authorize the live tutor.",
+      );
+      return false;
+    }
+
     clientRef.current.connect({
       callbacks: {
         onClose: () => {
@@ -312,7 +333,7 @@ export function useVoiceMentor({
         lesson: lessonGrounding,
         ...runtime,
       },
-      url: getAgentTutorLiveWebSocketUrl(),
+      url: liveSessionUrl,
     });
 
     return true;
@@ -332,7 +353,11 @@ export function useVoiceMentor({
       return;
     }
 
-    await connectSession();
+    const connected = await connectSession();
+
+    if (!connected) {
+      stopAudioCapture();
+    }
   };
 
   const disconnectSession = () => {

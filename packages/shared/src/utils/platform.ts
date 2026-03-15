@@ -1,10 +1,14 @@
+const bytesToBinary = (bytes: Uint8Array) =>
+  Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+
 export const decodeBase64ToBytes = (data: string): Uint8Array => {
-  const buffer = Buffer.from(data, "base64");
-  return new Uint8Array(buffer);
+  const binary = atob(data);
+
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 };
 
 export const encodeBytesToBase64 = (bytes: Uint8Array): string =>
-  Buffer.from(bytes).toString("base64");
+  btoa(bytesToBinary(bytes));
 
 export const toPrettyTitle = (value: string): string =>
   value

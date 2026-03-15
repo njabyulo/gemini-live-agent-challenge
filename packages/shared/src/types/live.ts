@@ -104,6 +104,21 @@ export interface IServerErrorEvent {
   message: string;
 }
 
+export interface ILiveSessionTokenClaims {
+  aud: "agent-tutor-live";
+  email: string;
+  exp: number;
+  iat: number;
+  scope: "live:connect";
+  sid: string;
+  sub: string;
+}
+
+export interface ILiveSessionTokenResponse {
+  expiresAt: string;
+  token: string;
+}
+
 export type TBrowserStartEvent = IBrowserStartEvent;
 export type TBrowserAudioEvent = IBrowserAudioEvent;
 export type TBrowserAudioEndEvent = IBrowserAudioEndEvent;

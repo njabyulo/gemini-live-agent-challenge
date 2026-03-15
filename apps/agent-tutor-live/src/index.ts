@@ -4,15 +4,33 @@ import { INPUT_AUDIO_MIME_TYPE } from "@gemini-live-agent/shared/consts";
 import {
   SBrowserEvent,
   type ILiveLessonGrounding,
+  type ILiveSessionTokenClaims,
   type IRuntimeSnapshot,
   type TServerErrorEvent,
   type TServerStatusEvent,
 } from "@gemini-live-agent/shared/types";
+import { verifyLiveSessionToken } from "@gemini-live-agent/shared/utils";
 import { WebSocketServer } from "ws";
 
 import { createLiveTutorSession } from "./workflows/createLiveTutorSession.js";
 
 const port = Number(process.env.PORT ?? 8080);
+const liveSessionSecret = process.env.AGENT_TUTOR_LIVE_SHARED_SECRET;
+const socketAuthClaims = new WeakMap<
+  import("ws").WebSocket,
+  ILiveSessionTokenClaims
+>();
+
+const closeUpgrade = (
+  socket: import("node:stream").Duplex,
+  statusCode: number,
+  message: string,
+) => {
+  socket.write(
+    `HTTP/1.1 ${statusCode} ${message}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`,
+  );
+  socket.destroy();
+};
 
 const server = createServer((req, res) => {
   if (req.url === "/health") {
@@ -25,9 +43,56 @@ const server = createServer((req, res) => {
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
-const wss = new WebSocketServer({ path: "/live", server });
+const wss = new WebSocketServer({ noServer: true });
+
+server.on("upgrade", async (req, socket, head) => {
+  const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+
+  if (url.pathname !== "/live") {
+    closeUpgrade(socket, 404, "Not Found");
+    return;
+  }
+
+  if (!liveSessionSecret) {
+    closeUpgrade(socket, 503, "Service Unavailable");
+    return;
+  }
+
+  const token = url.searchParams.get("token");
+
+  if (!token) {
+    closeUpgrade(socket, 401, "Unauthorized");
+    return;
+  }
+
+  try {
+    const claims = await verifyLiveSessionToken({
+      secret: liveSessionSecret,
+      token,
+    });
+
+    wss.handleUpgrade(req, socket, head, (webSocket) => {
+      socketAuthClaims.set(webSocket, claims);
+      wss.emit("connection", webSocket, req);
+    });
+  } catch (error) {
+    console.error("[agent-tutor-live] rejected live connection", error);
+    closeUpgrade(socket, 401, "Unauthorized");
+  }
+});
 
 wss.on("connection", (socket) => {
+  const authClaims = socketAuthClaims.get(socket);
+
+  if (!authClaims) {
+    socket.close(1008, "Unauthorized");
+    return;
+  }
+
+  console.log(
+    `[agent-tutor-live] accepted live connection for ${authClaims.sub}`,
+  );
+
   let session: Awaited<ReturnType<typeof createLiveTutorSession>> | null = null;
   let startEvent:
     | import("@gemini-live-agent/shared/types").TBrowserStartEvent
