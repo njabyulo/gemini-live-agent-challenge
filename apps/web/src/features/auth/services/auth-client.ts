@@ -2,10 +2,10 @@
 
 import { createAuthClient } from "better-auth/react";
 
-import { resolveBrowserAddress } from "~/utils/runtime-url";
+import { getBrowserApiBaseUrl, resolveBrowserAddress } from "~/utils/runtime-url";
 
 const baseURL = resolveBrowserAddress(
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8787",
+  getBrowserApiBaseUrl(),
 );
 
 export const authClient = createAuthClient({

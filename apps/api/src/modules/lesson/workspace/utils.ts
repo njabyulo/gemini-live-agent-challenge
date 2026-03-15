@@ -1,14 +1,13 @@
 import {
   DEFAULT_LESSON_ID,
   DEFAULT_TERMINAL_SESSION_ID,
-  DEFAULT_WORKSPACE_ROOT,
   getLessonDefinitionById,
 } from "@agent-tutor/shared/consts";
 import type {
   IRuntimeSnapshot,
+  IWorkspaceFileRecord,
   IWorkspaceBootstrapResponse,
 } from "@agent-tutor/shared/types";
-import { getSandbox } from "@cloudflare/sandbox";
 
 import type { IApiEnv } from "../../../utils/env";
 
@@ -35,7 +34,6 @@ export const createWorkspaceSnapshot = (
 });
 
 export const bootstrapLessonWorkspace = async (
-  env: IApiEnv,
   lessonId = DEFAULT_LESSON_ID,
 ): Promise<IWorkspaceBootstrapResponse> => {
   const lessonDefinition = getLessonDefinitionById(lessonId);
@@ -43,26 +41,9 @@ export const bootstrapLessonWorkspace = async (
     throw new Error(`Unknown lesson: ${lessonId}`);
   }
 
-  const sandboxId = `lesson-${crypto.randomUUID().toLowerCase()}`;
-  const sandbox = getSandbox(env.Sandbox, sandboxId, {
-    sleepAfter: "20m",
-  });
-
-  const session = await sandbox.createSession({
-    id: DEFAULT_TERMINAL_SESSION_ID,
-    cwd: DEFAULT_WORKSPACE_ROOT,
-    commandTimeoutMs: 60_000,
-  });
-
-  await session.mkdir(DEFAULT_WORKSPACE_ROOT, { recursive: true });
-
-  for (const file of lessonDefinition.files) {
-    await session.writeFile(file.path, file.content);
-  }
-
   return {
-    sandboxId,
-    terminalSessionId: session.id,
+    sandboxId: `lesson-${crypto.randomUUID().toLowerCase()}`,
+    terminalSessionId: DEFAULT_TERMINAL_SESSION_ID,
     lesson: lessonDefinition.lesson,
     files: lessonDefinition.files,
     snapshot: createWorkspaceSnapshot({
@@ -71,49 +52,163 @@ export const bootstrapLessonWorkspace = async (
   };
 };
 
-export const getLessonSession = async ({
-  env,
-  sandboxId,
+const getRunnerBaseUrl = (env: IApiEnv) => {
+  const value = env.RUNNER_CODE_EXECUTOR_BASE_URL;
+  if (value?.trim()) {
+    return value.replace(/\/$/, "");
+  }
+
+  try {
+    const authUrl = new URL(env.BETTER_AUTH_URL);
+    if (
+      authUrl.hostname === "localhost" ||
+      authUrl.hostname === "127.0.0.1"
+    ) {
+      return "http://127.0.0.1:8090";
+    }
+  } catch {
+    // Ignore malformed auth URL and fall through to explicit error.
+  }
+
+  throw new Error(
+    "RUNNER_CODE_EXECUTOR_BASE_URL is required outside local development.",
+  );
+};
+
+const tokenizeCommand = (input: string): string[] => {
+  const tokens: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | null = null;
+  let escaped = false;
+
+  for (const character of input) {
+    if (escaped) {
+      current += character;
+      escaped = false;
+      continue;
+    }
+
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (quote) {
+      if (character === quote) {
+        quote = null;
+      } else {
+        current += character;
+      }
+      continue;
+    }
+
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+
+    if (/\s/u.test(character)) {
+      if (current) {
+        tokens.push(current);
+        current = "";
+      }
+      continue;
+    }
+
+    current += character;
+  }
+
+  if (current) {
+    tokens.push(current);
+  }
+
+  return tokens;
+};
+
+const buildWorkspaceFiles = ({
+  lessonId,
+  sourceCode,
 }: {
+  lessonId: string;
+  sourceCode?: string;
+}): IWorkspaceFileRecord[] => {
+  const lessonDefinition = getLessonDefinitionById(lessonId);
+  if (!lessonDefinition) {
+    throw new Error(`Unknown lesson: ${lessonId}`);
+  }
+
+  return lessonDefinition.files.map((file) =>
+    file.path === "/workspace/main.py" && typeof sourceCode === "string"
+      ? {
+          ...file,
+          content: sourceCode,
+        }
+      : file,
+  );
+};
+
+const executeWithRunner = async ({
+  command,
+  env,
+  files,
+}: {
+  command: string;
   env: IApiEnv;
-  sandboxId: string;
+  files: IWorkspaceFileRecord[];
 }) => {
-  const sandbox = getSandbox(env.Sandbox, sandboxId, {
-    sleepAfter: "20m",
+  const response = await fetch(`${getRunnerBaseUrl(env)}/execute`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      command: tokenizeCommand(command),
+      files: files.map((file) => ({
+        content: file.content,
+        path: file.path.replace(/^\/workspace\//, ""),
+      })),
+    }),
   });
 
-  return sandbox.getSession(DEFAULT_TERMINAL_SESSION_ID);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Runner request failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as {
+    durationMs: number;
+    exitCode: number | null;
+    stderr: string;
+    stdout: string;
+    timedOut: boolean;
+  };
 };
 
 export const runLessonCommand = async ({
   command,
   env,
-  sandboxId,
+  lessonId,
   sourceCode,
 }: {
   command: string;
   env: IApiEnv;
-  sandboxId: string;
+  lessonId: string;
   sourceCode?: string;
 }): Promise<IRuntimeSnapshot> => {
-  const session = await getLessonSession({ env, sandboxId });
-
-  if (sourceCode) {
-    await session.writeFile("/workspace/main.py", sourceCode);
-  }
-
-  const result = await session.exec(command, {
-    cwd: DEFAULT_WORKSPACE_ROOT,
+  const files = buildWorkspaceFiles({ lessonId, sourceCode });
+  const result = await executeWithRunner({
+    command,
+    env,
+    files,
   });
-
-  const latestSource = sourceCode
-    ? sourceCode
-    : (await session.readFile("/workspace/main.py")).content;
 
   return createWorkspaceSnapshot({
     command,
-    sourceCode: latestSource,
+    sourceCode:
+      files.find((file) => file.path === "/workspace/main.py")?.content ?? "",
     stderr: result.stderr,
-    stdout: result.stdout,
+    stdout: result.timedOut
+      ? `${result.stdout}\n[command timed out after ${result.durationMs}ms]`
+      : result.stdout,
   });
 };

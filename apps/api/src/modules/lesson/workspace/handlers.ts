@@ -9,7 +9,6 @@ import {
 } from "./schemas";
 import {
   bootstrapLessonWorkspace,
-  getLessonSession,
   runLessonCommand,
 } from "./utils";
 
@@ -28,7 +27,7 @@ export const bootstrapLessonWorkspaceHandler = async (c: TApiContext) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const workspace = await bootstrapLessonWorkspace(c.env);
+  const workspace = await bootstrapLessonWorkspace();
   return c.json(workspace);
 };
 
@@ -38,7 +37,7 @@ export const loadLessonWorkspaceHandler = async (c: TApiContext) => {
   }
 
   const body = SLessonLoadBody.parse(await c.req.json());
-  const workspace = await bootstrapLessonWorkspace(c.env, body.lessonId);
+  const workspace = await bootstrapLessonWorkspace(body.lessonId);
   return c.json(workspace);
 };
 
@@ -47,16 +46,16 @@ export const getLessonMainFileHandler = async (c: TApiContext) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const { sandboxId } = SLessonSandboxQuery.parse({
+  SLessonSandboxQuery.parse({
     sandboxId: c.req.query("sandboxId"),
   });
-  const lessonSession = await getLessonSession({ env: c.env, sandboxId });
-  const file = await lessonSession.readFile("/workspace/main.py");
-
-  return c.json({
-    path: "/workspace/main.py",
-    content: file.content,
-  });
+  return c.json(
+    {
+      error:
+        "Remote file reads are no longer supported. The browser now owns current file state.",
+    },
+    410,
+  );
 };
 
 export const updateLessonMainFileHandler = async (c: TApiContext) => {
@@ -65,12 +64,7 @@ export const updateLessonMainFileHandler = async (c: TApiContext) => {
   }
 
   const body = SLessonFileUpdateBody.parse(await c.req.json());
-  const lessonSession = await getLessonSession({
-    env: c.env,
-    sandboxId: body.sandboxId,
-  });
-
-  await lessonSession.writeFile("/workspace/main.py", body.content);
+  void body;
 
   return c.json({
     ok: true,
@@ -85,10 +79,7 @@ export const resetLessonWorkspaceHandler = async (c: TApiContext) => {
 
   const body = await c.req.json().catch(() => ({}));
   const parsed = SLessonLoadBody.partial().parse(body);
-  const workspace = await bootstrapLessonWorkspace(
-    c.env,
-    parsed.lessonId,
-  );
+  const workspace = await bootstrapLessonWorkspace(parsed.lessonId);
   return c.json(workspace);
 };
 
@@ -101,7 +92,7 @@ export const runLessonCommandHandler = async (c: TApiContext) => {
   const runtime = await runLessonCommand({
     command: body.command,
     env: c.env,
-    sandboxId: body.sandboxId,
+    lessonId: body.lessonId,
     sourceCode: body.sourceCode,
   });
 
@@ -113,11 +104,16 @@ export const getLessonTerminalHandler = async (c: TApiContext) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const { sandboxId } = SLessonSandboxQuery.parse({
+  SLessonSandboxQuery.parse({
     sandboxId: c.req.query("sandboxId"),
   });
-  const lessonSession = await getLessonSession({ env: c.env, sandboxId });
-  return lessonSession.terminal(c.req.raw);
+  return c.json(
+    {
+      error:
+        "Interactive terminal sessions are not available in the runner-backed architecture.",
+    },
+    501,
+  );
 };
 
 export const echoLessonRuntimeHandler = async (c: TApiContext) => {

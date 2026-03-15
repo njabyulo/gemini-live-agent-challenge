@@ -2,7 +2,7 @@
 
 ## Scope
 
-Run `apps/api` locally as the auth + sandbox execution layer.
+Run `apps/api` locally as the auth + lesson orchestration layer.
 
 ## Responsibilities
 
@@ -10,18 +10,17 @@ Run `apps/api` locally as the auth + sandbox execution layer.
 
 1. Better Auth routes
 2. D1-backed auth/session state
-3. Cloudflare Sandbox bootstrap
+3. lesson bootstrap and reset
 4. `main.py` save/load endpoints
-5. real Python command execution
+5. proxying lesson execution to `apps/runner-code-executor`
 
-It does not own tutoring. That remains in `apps/agent-live`.
+It does not own tutoring. That remains in `apps/agent-tutor-live`. It also does not execute Python directly anymore.
 
 ## Prerequisites
 
 1. `pnpm install`
-2. Docker running locally
-3. `apps/api/.dev.vars.example` copied to `apps/api/.dev.vars`
-4. D1 database IDs filled into `infra/apps/api/wrangler.jsonc`
+2. `apps/api/.dev.vars.example` copied to `apps/api/.dev.vars`
+3. `apps/runner-code-executor` running locally or deployed
 
 ## Environment Setup
 
@@ -32,6 +31,7 @@ BETTER_AUTH_SECRET=replace-me-with-a-long-random-secret
 BETTER_AUTH_URL=http://localhost:8787
 BETTER_AUTH_TRUSTED_ORIGINS=http://localhost:3000
 BETTER_AUTH_ADMIN_TOKEN=replace-me-if-you-want-to-run-migrations
+RUNNER_CODE_EXECUTOR_BASE_URL=http://127.0.0.1:8090
 ```
 
 ## Run

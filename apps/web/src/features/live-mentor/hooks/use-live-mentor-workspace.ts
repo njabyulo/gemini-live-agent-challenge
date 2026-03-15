@@ -175,13 +175,14 @@ export function useLiveMentorWorkspace() {
     files.find((file) => file.path === activeFilePath) ?? files[0] ?? null;
 
   const executeCommand = (command: string) => {
-    if (!sandboxId) {
+    if (!sandboxId || !loadedLesson?.lessonId) {
       return;
     }
 
     appendTerminalBuffer(`$ ${command}\r\n`);
     runCommandMutation.mutate({
       command,
+      lessonId: loadedLesson.lessonId,
       sandboxId,
       sourceCode,
     });

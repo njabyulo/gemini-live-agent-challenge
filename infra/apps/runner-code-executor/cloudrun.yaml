@@ -1,0 +1,18 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: gemini-live-agent-prod-run-runner-backend-00
+spec:
+  template:
+    spec:
+      containers:
+        - image: us-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/agent-tutor/runner-code-executor:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: RUNNER_EXECUTION_TIMEOUT_MS
+              value: "10000"
+            - name: RUNNER_MAX_STDIO_BYTES
+              value: "65536"

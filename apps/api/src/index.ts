@@ -9,8 +9,6 @@ import { createMigrationRoutes } from "./modules/platform/migrations/routes";
 import { createAuthSessionRoutes } from "./modules/auth/session/routes";
 import { createLessonWorkspaceRoutes } from "./modules/lesson/workspace/routes";
 
-export { Sandbox } from "@cloudflare/sandbox";
-
 const app = createApiApp();
 
 app.onError(handleApiError);

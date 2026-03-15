@@ -1,11 +1,9 @@
-import type { Sandbox } from "@cloudflare/sandbox";
-
-export interface IApiEnv extends Omit<Env, "Sandbox"> {
+export interface IApiEnv extends Env {
   BETTER_AUTH_ADMIN_TOKEN?: string;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_TRUSTED_ORIGINS?: string;
   BETTER_AUTH_URL: string;
-  Sandbox: DurableObjectNamespace<Sandbox>;
+  RUNNER_CODE_EXECUTOR_BASE_URL?: string;
 }
 
 const getLocalOriginAliases = (value: string): string[] => {

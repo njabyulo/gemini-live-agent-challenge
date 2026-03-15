@@ -12,6 +12,7 @@ export const SLessonLoadBody = z.object({
 
 export const SLessonRunCommandBody = z.object({
   command: z.string().min(1),
+  lessonId: z.string().min(1),
   sandboxId: z.string().min(1),
   sourceCode: z.string().optional(),
 });

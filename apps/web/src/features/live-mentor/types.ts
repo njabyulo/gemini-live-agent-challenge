@@ -20,6 +20,7 @@ export interface ITranscriptMessage {
 
 export interface IWorkspaceRunInput {
   command: string;
+  lessonId: string;
   sandboxId: string;
   sourceCode: string;
 }
@@ -85,15 +86,15 @@ export interface ILiveMentorAudioRefs {
   stream: MediaStream | null;
 }
 
-export interface IAgentLiveClientCallbacks {
+export interface IAgentTutorLiveClientCallbacks {
   onClose: () => void;
   onError: () => void;
   onEvent: (event: TServerEvent) => void;
   onOpen: () => void;
 }
 
-export interface IAgentLiveClientConnectInput {
-  callbacks: IAgentLiveClientCallbacks;
+export interface IAgentTutorLiveClientConnectInput {
+  callbacks: IAgentTutorLiveClientCallbacks;
   startPayload: Extract<TBrowserEvent, { type: "start" }>;
   url: string;
 }

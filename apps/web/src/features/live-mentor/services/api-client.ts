@@ -1,15 +1,17 @@
-import { resolveBrowserAddress } from "~/utils/runtime-url";
+import {
+  getBrowserAgentTutorLiveWebSocketUrl,
+  getBrowserApiBaseUrl,
+  resolveBrowserAddress,
+} from "~/utils/runtime-url";
 
 const API_BASE_URL = resolveBrowserAddress(
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8787",
+  getBrowserApiBaseUrl(),
 );
 
 export const getApiBaseUrl = () => API_BASE_URL.replace(/\/$/, "");
 
-export const getAgentLiveWebSocketUrl = () =>
-  resolveBrowserAddress(
-    process.env.NEXT_PUBLIC_AGENT_LIVE_WS_URL ?? "ws://localhost:8080/live",
-  );
+export const getAgentTutorLiveWebSocketUrl = () =>
+  resolveBrowserAddress(getBrowserAgentTutorLiveWebSocketUrl());
 
 export async function fetchJson<TResponse>(
   path: string,
