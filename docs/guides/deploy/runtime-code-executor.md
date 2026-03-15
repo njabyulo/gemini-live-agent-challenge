@@ -13,6 +13,10 @@ Current production service:
 
 - `gemini-live-agent-prod-run-runner-backend-00`
 
+Current runtime identity:
+
+- `419058482352-compute@developer.gserviceaccount.com`
+
 ## GCP Auth
 
 Authenticate and target the correct project before deploying:
@@ -43,6 +47,8 @@ gcloud artifacts repositories create gemini-live-agent \
   --repository-format=docker \
   --description="gemini-live-agent Cloud Run images"
 ```
+
+The checked-in Cloud Run manifest explicitly pins the service account so future secret-backed runner config can be granted to a predictable identity.
 
 ## Required Environment
 

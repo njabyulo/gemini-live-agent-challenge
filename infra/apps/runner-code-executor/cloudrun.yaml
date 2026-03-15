@@ -5,6 +5,7 @@ metadata:
 spec:
   template:
     spec:
+      serviceAccountName: 419058482352-compute@developer.gserviceaccount.com
       containers:
         - image: us-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/gemini-live-agent/runner-code-executor:latest
           ports:

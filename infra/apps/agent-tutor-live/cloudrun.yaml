@@ -5,12 +5,21 @@ metadata:
 spec:
   template:
     spec:
+      serviceAccountName: 419058482352-compute@developer.gserviceaccount.com
       containers:
         - image: us-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/gemini-live-agent/agent-tutor-live:latest
           ports:
             - containerPort: 8080
           env:
+            - name: AGENT_TUTOR_LIVE_SHARED_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gemini-live-agent-prod-live-shared-secret
+                  key: latest
             - name: GEMINI_LIVE_MODEL
               value: "gemini-2.5-flash-native-audio-preview-12-2025"
             - name: GEMINI_API_KEY
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: gemini-live-agent-prod-gemini-api-key
+                  key: latest

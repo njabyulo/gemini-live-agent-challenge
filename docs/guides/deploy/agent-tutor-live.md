@@ -13,6 +13,10 @@ Current production service:
 
 - `gemini-live-agent-prod-run-agent-backend-00`
 
+Current runtime identity:
+
+- `419058482352-compute@developer.gserviceaccount.com`
+
 ## GCP Auth
 
 Authenticate and target the correct project before deploying:
@@ -44,12 +48,15 @@ gcloud artifacts repositories create gemini-live-agent \
   --description="gemini-live-agent Cloud Run images"
 ```
 
+The checked-in Cloud Run manifest explicitly pins the service account, so secret access must be granted to that identity before deploys can succeed.
+
 ## Required Environment
 
 1. `GEMINI_API_KEY`
-2. `GEMINI_LIVE_MODEL`
-3. `GOOGLE_CLOUD_PROJECT`
-4. `GOOGLE_CLOUD_REGION`
+2. `AGENT_TUTOR_LIVE_SHARED_SECRET`
+3. `GEMINI_LIVE_MODEL`
+4. `GOOGLE_CLOUD_PROJECT`
+5. `GOOGLE_CLOUD_REGION`
 
 Do not set `PORT` in `cloudrun.yaml`.
 
@@ -78,6 +85,34 @@ Then attach the secret to the Cloud Run service:
 gcloud run services update gemini-live-agent-prod-run-agent-backend-00 \
   --region="${GOOGLE_CLOUD_REGION:-us-central1}" \
   --update-secrets=GEMINI_API_KEY=gemini-live-agent-prod-gemini-api-key:latest
+```
+
+Create and attach the shared live-session secret too:
+
+```bash
+printf '%s' '<shared-live-secret>' | \
+  gcloud secrets create gemini-live-agent-prod-live-shared-secret --data-file=- || true
+
+printf '%s' '<shared-live-secret>' | \
+  gcloud secrets versions add gemini-live-agent-prod-live-shared-secret --data-file=-
+
+gcloud run services update gemini-live-agent-prod-run-agent-backend-00 \
+  --region="${GOOGLE_CLOUD_REGION:-us-central1}" \
+  --update-secrets=AGENT_TUTOR_LIVE_SHARED_SECRET=gemini-live-agent-prod-live-shared-secret:latest
+```
+
+Grant Secret Manager access to the Cloud Run service account for both secrets:
+
+```bash
+gcloud secrets add-iam-policy-binding gemini-live-agent-prod-gemini-api-key \
+  --project "$GOOGLE_CLOUD_PROJECT" \
+  --member='serviceAccount:419058482352-compute@developer.gserviceaccount.com' \
+  --role='roles/secretmanager.secretAccessor'
+
+gcloud secrets add-iam-policy-binding gemini-live-agent-prod-live-shared-secret \
+  --project "$GOOGLE_CLOUD_PROJECT" \
+  --member='serviceAccount:419058482352-compute@developer.gserviceaccount.com' \
+  --role='roles/secretmanager.secretAccessor'
 ```
 
 Set or update the non-secret runtime vars:
@@ -166,6 +201,12 @@ gcloud run services update gemini-live-agent-prod-run-agent-backend-00 \
 ## Public Invocation
 
 The browser must be able to reach the live tutor service directly.
+The browser does not connect anonymously:
+
+- `apps/web` first calls `POST /api/live/token`
+- `apps/api` signs a short-lived token with `AGENT_TUTOR_LIVE_SHARED_SECRET`
+- the browser connects to `wss://.../live?token=...`
+- `apps/agent-tutor-live` verifies that token before accepting the socket
 
 Grant unauthenticated invoker access:
 
@@ -188,7 +229,8 @@ After the service is deployed, use the Cloud Run service URL in `apps/web`:
 1. capture the Cloud Run service URL
 2. update `apps/web` so `NEXT_PUBLIC_AGENT_TUTOR_LIVE_WS_URL` points at:
    - `wss://<agent-tutor-live-service>.a.run.app/live`
-3. redeploy `apps/web`
+3. make sure `apps/api` has the same `AGENT_TUTOR_LIVE_SHARED_SECRET`
+4. redeploy `apps/api` and `apps/web`
 
 ## Optional Custom Hostname
 
@@ -207,9 +249,10 @@ Skip this section unless you intentionally choose to reintroduce a custom hostna
 ## Post-Deploy Checks
 
 1. `GET /health` returns `200`
-2. WebSocket upgrade on `/live` works
+2. WebSocket upgrade on `/live` rejects missing or invalid tokens
 3. `apps/web` can reach the live runtime on the configured WebSocket URL
-4. Tutor responses reference current source code and runtime output
-5. Audio in/out and transcripts work end to end
-6. The architecture diagram and demo clearly show Cloud Run as the live tutor host
-7. If `/health` returns `403`, re-check the `roles/run.invoker` binding.
+4. `apps/web` receives a valid token from `POST /api/live/token` before connecting
+5. Tutor responses reference current source code and runtime output
+6. Audio in/out and transcripts work end to end
+7. The architecture diagram and demo clearly show Cloud Run as the live tutor host
+8. If `/health` returns `403`, re-check the `roles/run.invoker` binding.
