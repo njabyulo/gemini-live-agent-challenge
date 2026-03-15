@@ -163,6 +163,7 @@ export const useLiveMentorStore = create<ILiveMentorStoreState>((set) => ({
   setActiveRailTab: (activeRailTab) => set({ activeRailTab }),
   setFileContent: (path, content) =>
     set((state) => ({
+      contextVersion: state.contextVersion + 1,
       files: state.files.map((file) =>
         file.path === path ? { ...file, content } : file,
       ),

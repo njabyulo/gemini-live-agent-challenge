@@ -179,6 +179,21 @@ export function useVoiceMentor({
     }
   }, [isSessionLive, sendContextUpdate]);
 
+  useEffect(() => {
+    if (!isSessionLive || !clientRef.current?.isOpen()) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      sendContextUpdate();
+      void shareWorkspaceImage();
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [contextVersion, isSessionLive, sendContextUpdate, shareWorkspaceImage]);
+
   const handleServerEvent = async (
     event: import("@gemini-live-agent/shared/types").TServerEvent,
   ) => {
