@@ -9,7 +9,8 @@
   },
   "compatibility_date": "2026-03-12",
   "vars": {
-    "NEXT_PUBLIC_API_BASE_URL": "https://gemini-live-agent.njabulomajozi.com"
+    "NEXT_PUBLIC_API_BASE_URL": "https://gemini-live-agent.njabulomajozi.com",
+    "NEXT_PUBLIC_AGENT_TUTOR_LIVE_WS_URL": "wss://gemini-live-agent-prod-run-agent-backend-00-lplavjqpvq-uc.a.run.app/live"
   },
   "workers_dev": false,
   "observability": {

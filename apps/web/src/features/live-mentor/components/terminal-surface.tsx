@@ -62,6 +62,16 @@ export function TerminalSurface({
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
     terminal.open(containerRef.current);
+    const helperTextarea =
+      containerRef.current.parentElement?.querySelector<HTMLTextAreaElement>(
+        "textarea.xterm-helper-textarea",
+      );
+
+    if (helperTextarea) {
+      helperTextarea.id = "workspace-terminal-helper";
+      helperTextarea.name = "workspaceTerminalHelper";
+    }
+
     fitAddon.fit();
 
     terminalRef.current = terminal;
@@ -118,6 +128,7 @@ export function TerminalSurface({
           <div className="flex min-h-11 min-w-0 items-center rounded-full border border-[rgba(20,31,24,0.1)] bg-[#f8fbf7] px-4">
             <Input
               id="program-argument"
+              name="programInput"
               value={programInput}
               onChange={(event) => onProgramInputChange(event.target.value)}
               placeholder={DEFAULT_PROGRAM_INPUT}

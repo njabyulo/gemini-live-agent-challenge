@@ -1,5 +1,12 @@
 "use client";
 
+const PRODUCTION_APP_HOSTNAMES = new Set([
+  "gemini-live-agent.njabulomajozi.com",
+]);
+
+const DEFAULT_PRODUCTION_AGENT_TUTOR_LIVE_WS_URL =
+  "wss://gemini-live-agent-prod-run-agent-backend-00-lplavjqpvq-uc.a.run.app/live";
+
 const getBrowserHttpOrigin = () => {
   if (typeof window === "undefined") {
     return null;
@@ -74,6 +81,13 @@ export const getBrowserApiBaseUrl = () => {
 export const getBrowserAgentTutorLiveWebSocketUrl = () => {
   if (typeof window === "undefined") {
     return "ws://localhost:8080/live";
+  }
+
+  if (PRODUCTION_APP_HOSTNAMES.has(window.location.hostname)) {
+    return (
+      process.env.NEXT_PUBLIC_AGENT_TUTOR_LIVE_WS_URL ??
+      DEFAULT_PRODUCTION_AGENT_TUTOR_LIVE_WS_URL
+    );
   }
 
   return (

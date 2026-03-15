@@ -6,6 +6,7 @@ import {
   FlaskConical,
   BookOpenText,
 } from "lucide-react";
+import { useEffect, useRef } from "react";
 import {
   Tabs,
   TabsContent,
@@ -82,9 +83,46 @@ export function CodeEditorSurface({
   onSelectFile: (path: string) => void;
 }) {
   const activePath = activeFile?.path ?? files[0]?.path ?? "/workspace/main.py";
+  const editorSurfaceRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!editorSurfaceRef.current) {
+      return;
+    }
+
+    const setImeTextareaAttributes = () => {
+      const imeTextarea =
+        editorSurfaceRef.current?.querySelector<HTMLTextAreaElement>(
+          "textarea.ime-text-area",
+        );
+
+      if (!imeTextarea) {
+        return;
+      }
+
+      imeTextarea.id = "workspace-editor-ime";
+      imeTextarea.name = "workspaceEditorIme";
+    };
+
+    setImeTextareaAttributes();
+
+    const observer = new MutationObserver(() => {
+      setImeTextareaAttributes();
+    });
+
+    observer.observe(editorSurfaceRef.current, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activePath]);
 
   return (
     <section
+      ref={editorSurfaceRef}
       className={cn(
         "editor-grid flex min-h-0 flex-col overflow-hidden",
         embedded

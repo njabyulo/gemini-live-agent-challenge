@@ -9,6 +9,9 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
+  "vars": {
+    "RUNNER_CODE_EXECUTOR_BASE_URL": "https://gemini-live-agent-prod-run-runner-backend-00-lplavjqpvq-uc.a.run.app"
+  },
   "d1_databases": [
     {
       "binding": "DB",
