@@ -35,6 +35,7 @@ Before deploying `apps/api`, make sure:
    - `gemini-live-agent-prod-d1-auth-core-00`
 2. `apps/runner-code-executor` is deployed on Cloud Run
 3. you know the runner base URL that the API should call
+4. `apps/agent-tutor-live` has a shared secret chosen for live-session token verification
 
 ## Worker Secrets
 
@@ -50,6 +51,18 @@ Optional:
 
 ```bash
 pnpm exec wrangler secret put BETTER_AUTH_ADMIN_TOKEN --config infra/apps/api/wrangler.jsonc
+```
+
+Live tutor token secret:
+
+```bash
+pnpm exec wrangler secret put AGENT_TUTOR_LIVE_SHARED_SECRET --config infra/apps/api/wrangler.jsonc
+```
+
+Optional token TTL override:
+
+```bash
+pnpm exec wrangler secret put AGENT_TUTOR_LIVE_TOKEN_TTL_SECONDS --config infra/apps/api/wrangler.jsonc
 ```
 
 Runner runtime URL:
@@ -75,6 +88,12 @@ Expected values:
    - base URL for `apps/runner-code-executor`
    - recommended first value: the Cloud Run service URL
    - if the runner service returns `403`, make it publicly invokable first
+6. `AGENT_TUTOR_LIVE_SHARED_SECRET`
+   - shared signing secret used to mint short-lived live tutor WebSocket tokens
+   - must exactly match the secret configured on `apps/agent-tutor-live`
+7. `AGENT_TUTOR_LIVE_TOKEN_TTL_SECONDS`
+   - optional override
+   - default is `60`
 
 Example production secret entry:
 
@@ -87,6 +106,9 @@ printf '%s' 'https://gemini-live-agent.njabulomajozi.com' | \
 
 printf '%s' 'https://<runner-cloud-run-url>' | \
   pnpm exec wrangler secret put RUNNER_CODE_EXECUTOR_BASE_URL --config infra/apps/api/wrangler.jsonc
+
+printf '%s' '<shared-live-secret>' | \
+  pnpm exec wrangler secret put AGENT_TUTOR_LIVE_SHARED_SECRET --config infra/apps/api/wrangler.jsonc
 ```
 
 ## Bindings
@@ -140,11 +162,13 @@ curl -X POST \
 
 1. Better Auth routes respond under `https://gemini-live-agent.njabulomajozi.com/api/auth/*`.
 2. Login from `apps/web` succeeds against the production API.
-3. `POST /api/lesson/bootstrap` creates a lesson workspace payload.
-4. `POST /api/lesson/run` executes Python commands successfully.
-5. If `POST /api/lesson/run` fails, verify that `RUNNER_CODE_EXECUTOR_BASE_URL` points at a healthy `apps/runner-code-executor` deployment.
-6. If sign-in fails, re-check:
+3. `POST /api/live/token` returns `200` for authenticated users and `401` for anonymous requests.
+4. `POST /api/lesson/bootstrap` creates a lesson workspace payload.
+5. `POST /api/lesson/run` executes Python commands successfully.
+6. If `POST /api/lesson/run` fails, verify that `RUNNER_CODE_EXECUTOR_BASE_URL` points at a healthy `apps/runner-code-executor` deployment.
+7. If sign-in fails, re-check:
    - `BETTER_AUTH_URL`
    - `BETTER_AUTH_TRUSTED_ORIGINS`
    - Better Auth migration status in the D1 database
-7. If `RUNNER_CODE_EXECUTOR_BASE_URL/health` returns `403`, add `roles/run.invoker` for `allUsers` on the runner Cloud Run service.
+8. If the live tutor fails to authorize, re-check that `AGENT_TUTOR_LIVE_SHARED_SECRET` matches the value configured on `apps/agent-tutor-live`.
+9. If `RUNNER_CODE_EXECUTOR_BASE_URL/health` returns `403`, add `roles/run.invoker` for `allUsers` on the runner Cloud Run service.

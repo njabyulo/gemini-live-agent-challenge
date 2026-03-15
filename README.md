@@ -24,7 +24,7 @@ The core product loop is:
 - `apps/api`
   - Hono API on Cloudflare Workers
   - Better Auth + D1
-  - lesson bootstrap and runner-backed execution
+  - lesson bootstrap, runner-backed execution, and live-session token minting
 - `apps/runner-code-executor`
   - internal Python execution backend
   - fresh temp workspace per run
@@ -41,6 +41,7 @@ The core product loop is:
 - Python-focused lessons
 - disposable workspaces
 - live tutor with voice, transcript, and multimodal grounding
+- short-lived live WebSocket authorization issued by `apps/api`
 - lesson-aware guidance tied to:
   - active lesson content
   - current source code
@@ -58,6 +59,7 @@ The core product loop is:
    - `apps/agent-tutor-live/.env`
    - `apps/runner-code-executor/.env`
 3. Fill in the required secrets.
+   - `apps/api` and `apps/agent-tutor-live` must share the same `AGENT_TUTOR_LIVE_SHARED_SECRET`
 4. Start the full stack:
    - `pnpm dev`
 

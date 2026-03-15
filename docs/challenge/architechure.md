@@ -53,7 +53,8 @@ flowchart LR
     HONO --> WORKSPACE
     WORKSPACE --> EXEC
 
-    VC -->|WebSocket + text/audio/image context| WS
+    VC -->|issue short-lived live token| HONO
+    VC -->|WebSocket + token + text/audio/image context| WS
     WS --> TOOLS
     WS --> GL
 
@@ -73,16 +74,17 @@ flowchart LR
 4. When the learner runs code, `apps/api` sends the current lesson files and command to `apps/runner-code-executor`.
 5. `apps/runner-code-executor` creates a fresh temp workspace, executes Python, and returns stdout/stderr.
 6. `apps/api` normalizes that result into the runtime snapshot shape used by the UI.
-7. When the learner asks for help, `apps/web` sends the live tutor:
+7. When the learner asks for help, `apps/web` first requests a short-lived live-session token from `apps/api`.
+8. `apps/web` sends the live tutor:
    - lesson context
    - current source code
    - latest command
    - latest stdout/stderr
    - screenshot of the visible workspace
    - audio or text input
-8. `apps/agent-tutor-live` enriches the turn and forwards it to Gemini Live.
-9. Gemini Live responds with transcript and audio output.
-10. `apps/web` renders the tutor response in the learning rail.
+9. `apps/agent-tutor-live` verifies the token during the WebSocket upgrade, enriches the turn, and forwards it to Gemini Live.
+10. Gemini Live responds with transcript and audio output.
+11. `apps/web` renders the tutor response in the learning rail.
 
 ## Why This Architecture Matters For Judging
 
@@ -100,6 +102,9 @@ This architecture is important because the tutor is:
   - latest command
   - terminal stdout/stderr
   - screenshot of the current workspace
+- session-aware
+  - short-lived live tutor token minted by `apps/api`
+  - WebSocket accepted only after server-side token verification
 - challenge-aligned
   - Gemini Live through the Google GenAI SDK
   - live tutor backend hosted on Google Cloud Run

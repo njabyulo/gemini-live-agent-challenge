@@ -49,11 +49,12 @@ Repo evidence:
 ## How Google Services Show Up In The User Experience
 
 When the learner asks for help:
-1. the browser sends lesson context, runtime context, and a workspace screenshot
-2. `apps/agent-tutor-live` receives the turn over a live WebSocket session
-3. `apps/agent-tutor-live` sends that grounded turn to Gemini Live
-4. Gemini Live returns tutor audio and transcript output
-5. the learner hears and sees the tutor response in the app
+1. the browser asks `apps/api` for a short-lived live-session token
+2. the browser sends lesson context, runtime context, and a workspace screenshot over the live WebSocket
+3. `apps/agent-tutor-live` verifies the token and receives the turn
+4. `apps/agent-tutor-live` sends that grounded turn to Gemini Live
+5. Gemini Live returns tutor audio and transcript output
+6. the learner hears and sees the tutor response in the app
 
 This means the Google stack is directly visible in the product:
 - not just in infrastructure

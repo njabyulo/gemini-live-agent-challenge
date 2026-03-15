@@ -33,8 +33,10 @@ Before deploying `apps/web`, make sure these are already live:
 
 1. `apps/api`
    - mounted at `https://gemini-live-agent.njabulomajozi.com/api/*`
+   - configured with `AGENT_TUTOR_LIVE_SHARED_SECRET`
 2. `apps/agent-tutor-live`
    - reachable at its Cloud Run `run.app` WebSocket URL
+   - configured with the same `AGENT_TUTOR_LIVE_SHARED_SECRET`
 
 ## Runtime Config
 
@@ -57,6 +59,13 @@ Example `vars` block for `infra/apps/web/wrangler.jsonc`:
 ```
 
 If you change `vars`, deploy the worker again for the change to take effect.
+
+Connection model:
+
+1. the browser calls `POST /api/live/token`
+2. `apps/api` returns a short-lived signed token
+3. `apps/web` opens `wss://<agent-tutor-live-service>.a.run.app/live?token=<...>`
+4. `apps/agent-tutor-live` verifies the token before accepting the socket
 
 Current source of truth:
 
@@ -96,5 +105,6 @@ pnpm release:web
 3. The frontend can reach:
    - `https://gemini-live-agent.njabulomajozi.com/api/*`
    - the configured `agent-tutor-live` WebSocket URL
-4. `/app` renders the editor, terminal, and learning rail without runtime configuration errors.
-5. If the live tutor WebSocket fails with `403`, add `roles/run.invoker` for `allUsers` on the `agent-tutor-live` Cloud Run service.
+4. starting the tutor first calls `POST /api/live/token`
+5. `/app` renders the editor, terminal, and learning rail without runtime configuration errors.
+6. If the live tutor WebSocket fails with `403`, add `roles/run.invoker` for `allUsers` on the `agent-tutor-live` Cloud Run service.

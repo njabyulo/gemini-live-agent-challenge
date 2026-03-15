@@ -18,6 +18,11 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:8787
 NEXT_PUBLIC_AGENT_TUTOR_LIVE_WS_URL=ws://localhost:8080/live
 ```
 
+Local prerequisite:
+
+- `apps/api/.dev.vars` must include `AGENT_TUTOR_LIVE_SHARED_SECRET`
+- `apps/agent-tutor-live/.env` must include the same `AGENT_TUTOR_LIVE_SHARED_SECRET`
+
 ## Run
 
 1. Full local stack: `pnpm dev`
@@ -50,6 +55,7 @@ At `/app` after login:
 4. Running `python3 main.py "Ada Lovelace"` shows real runtime output in the terminal
 5. Loading a lesson provisions a fresh workspace again
 6. Voice tutor can connect to `apps/agent-tutor-live`
+7. Starting the tutor first requests `POST /api/live/token`, then opens the WebSocket with `?token=...`
 
 ## Quality Checks
 
